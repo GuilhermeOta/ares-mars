@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Globe, 
   Map, 
@@ -14,7 +14,8 @@ import {
   ShieldAlert, 
   Wind, 
   Droplet, 
-  Mountain 
+  Mountain,
+  X
 } from 'lucide-react';
 import GlobeView from './views/GlobeView';
 import MapView from './views/MapView';
@@ -24,99 +25,106 @@ function App() {
   const [activeFilter, setActiveFilter] = useState('agua');
   
   const [isLeftExpanded, setIsLeftExpanded] = useState(false);
-  const [isRightVisible, setIsRightVisible] = useState(true);
+  
+  // Painéis desabilitados (fechados) por padrão ao carregar a aplicação
+  const [isLeftVisible, setIsLeftVisible] = useState(false);
+  const [isRightVisible, setIsRightVisible] = useState(false);
+
+  // Alterna o modo de visualização (Globe / Map)
+  const handleToggleViewMode = () => {
+    const newMode = viewMode === 'globe' ? 'map' : 'globe';
+    setViewMode(newMode);
+    
+    if (newMode === 'map') {
+      const isMobile = window.innerWidth < 640;
+      // Mantém desabilitados por padrão no mobile e desktop ao alternar
+      setIsLeftVisible(false);
+      setIsRightVisible(false);
+      setIsLeftExpanded(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-black text-zinc-100 overflow-hidden select-none font-sans">
       
-      {/* ========================================================== */}
-      {/* 1. CAMADA DE FUNDO WEBGL (Com transição suave de fade/zoom) */}
-      {/* ========================================================== */}
+      {/* 1. CAMADA DE FUNDO WEBGL */}
       <div className="absolute inset-0 z-0 w-full h-full bg-black">
         {viewMode === 'globe' ? (
-          <GlobeView onSelectSector={() => setViewMode('map')} />
+          <GlobeView onSelectSector={() => { setViewMode('map'); setIsRightVisible(true); }} />
         ) : (
-          <div className="absolute inset-0 z-0 w-full h-full bg-black">
-  {viewMode === 'globe' ? (
-    <GlobeView onSelectSector={() => setViewMode('map')} />
-  ) : (
-    /* AQUI ENTRA O MAPA 2D REAL COM LEAFLET */
-    <MapView activeFilter={activeFilter} />
-  )}
-</div>
+          <MapView activeFilter={activeFilter} />
         )}
       </div>
 
-      {/* ========================================================== */}
-      {/* 2. BARRA SUPERIOR (Com micro-interações refinadas)         */}
-      {/* ========================================================== */}
-      <header className="absolute top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-md border-b border-zinc-800 flex items-center px-6 justify-between z-30 shadow-2xl transition-all duration-300">
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-7 h-7 rounded bg-amber-500/10 border border-amber-500/40 flex items-center justify-center transition-transform duration-300 hover:rotate-45">
+      {/* 2. BARRA SUPERIOR */}
+      <header className="absolute top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-md border-b border-zinc-800 flex items-center px-3 sm:px-6 justify-between z-30 shadow-2xl transition-all duration-300">
+        <div className="flex items-center space-x-3 sm:space-x-6">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-7 h-7 rounded bg-amber-500/10 border border-amber-500/40 flex items-center justify-center transition-transform duration-300 hover:rotate-45 shrink-0">
               <Compass className="w-4 h-4 text-amber-400" />
             </div>
-            <span className="text-xl font-bold tracking-[0.25em] text-white">
+            <span className="text-lg sm:text-xl font-bold tracking-[0.2em] sm:tracking-[0.25em] text-white">
               ARES
             </span>
-            <span className="text-[10px] uppercase tracking-[0.15em] font-semibold px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] font-semibold px-1.5 sm:px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800 hidden xs:inline">
               NASA Mission
             </span>
           </div>
-          <span className="text-xs text-zinc-400 border-l border-zinc-800 pl-6 hidden sm:inline uppercase tracking-wider">
+          <span className="text-xs text-zinc-400 border-l border-zinc-800 pl-4 sm:pl-6 hidden md:inline uppercase tracking-wider">
             Target Sector: <strong className="text-white font-medium">Arcadia Planitia</strong>
           </span>
         </div>
         
         <div className="flex items-center space-x-3">
           <button 
-            onClick={() => {
-              const newMode = viewMode === 'globe' ? 'map' : 'globe';
-              setViewMode(newMode);
-              if (newMode === 'map') {
-                setIsLeftExpanded(false);
-                setIsRightVisible(true);
-              }
-            }}
-            className="px-4 py-2 bg-white hover:bg-zinc-200 text-black rounded text-xs font-bold tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-white/10 flex items-center space-x-2 cursor-pointer active:scale-95 transform-gpu"
+            onClick={handleToggleViewMode}
+            className="px-3 sm:px-4 py-2 bg-white hover:bg-zinc-200 text-black rounded text-[11px] sm:text-xs font-bold tracking-wider sm:tracking-widest uppercase transition-all duration-300 shadow-md hover:shadow-white/10 flex items-center space-x-1.5 sm:space-x-2 cursor-pointer active:scale-95 transform-gpu shrink-0"
           >
             {viewMode === 'globe' ? (
-              <span>Iniciar Exploração (2D)</span>
+              <span>Exploração (2D)</span>
             ) : (
               <>
                 <Globe className="w-3.5 h-3.5 text-black" />
-                <span>Voltar ao Globo (3D)</span>
+                <span>Globo (3D)</span>
               </>
             )}
           </button>
         </div>
       </header>
 
-      {/* ========================================================== */}
-      {/* 3. PAINÉIS LATERAIS FLUTUANTES (Fluidez de expansão e fade)  */}
-      {/* ========================================================== */}
+      {/* 3. PAINÉIS LATERAIS FLUTUANTES */}
       
       {/* Menu Esquerdo: Filtros Científicos */}
-      <aside className={`absolute top-20 left-6 bottom-24 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-4 flex flex-col justify-between z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
-        viewMode === 'globe' 
+      <aside className={`absolute top-20 left-3 sm:left-6 bottom-24 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col justify-between z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
+        viewMode === 'globe' || !isLeftVisible
           ? '-translate-x-[450px] opacity-0 pointer-events-none scale-95' 
-          : `${isLeftExpanded ? 'w-80' : 'w-64'} translate-x-0 opacity-100 scale-100 pointer-events-auto`
+          : `${isLeftExpanded ? 'w-[calc(100%-2.5rem)] sm:w-80' : 'w-[calc(100%-2.5rem)] sm:w-64'} translate-x-0 opacity-100 scale-100 pointer-events-auto`
       }`}>
         <div>
-          <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-800">
+          <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-zinc-800">
             <div className="flex items-center space-x-2">
               <Layers className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-180" />
               <h2 className="text-xs font-semibold text-white uppercase tracking-[0.15em]">Filtros Científicos</h2>
             </div>
-            <button 
-              onClick={() => setIsLeftExpanded(!isLeftExpanded)}
-              className="text-zinc-400 hover:text-white transition-colors duration-200 cursor-pointer p-1 rounded hover:bg-zinc-900"
-            >
-              {isLeftExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-            </button>
+            <div className="flex items-center space-x-1">
+              <button 
+                onClick={() => setIsLeftExpanded(!isLeftExpanded)}
+                className="text-zinc-400 hover:text-white transition-colors duration-200 cursor-pointer p-1 rounded hover:bg-zinc-900 hidden sm:block"
+                title={isLeftExpanded ? "Recolher" : "Expandir"}
+              >
+                {isLeftExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              </button>
+              <button 
+                onClick={() => setIsLeftVisible(false)}
+                className="text-zinc-400 hover:text-white transition-colors duration-200 cursor-pointer p-1 rounded hover:bg-zinc-900"
+                title="Fechar Painel"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-220px)]">
             {[
               { id: 'agua', name: 'Água (Subterrânea)', icon: Droplet, desc: 'Dados SWIM & SHARAD' },
               { id: 'geologia', name: 'Geologia & Minerais', icon: Mountain, desc: 'Espectroscopia CRISM' },
@@ -129,7 +137,7 @@ function App() {
                 <button
                   key={filter.id}
                   onClick={() => setActiveFilter(filter.id)}
-                  className={`w-full p-3 rounded text-xs transition-all duration-300 text-left flex flex-col justify-between cursor-pointer border transform-gpu hover:translate-x-1 ${
+                  className={`w-full p-2.5 sm:p-3 rounded text-xs transition-all duration-300 text-left flex flex-col justify-between cursor-pointer border transform-gpu hover:translate-x-1 ${
                     isActive 
                       ? 'bg-zinc-900 border-amber-500/50 text-white font-medium shadow-lg shadow-amber-500/5' 
                       : 'bg-zinc-900/40 border-zinc-800/60 text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200 hover:border-zinc-700'
@@ -149,17 +157,28 @@ function App() {
           </div>
         </div>
 
-        <div className="pt-3 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between items-center font-mono uppercase tracking-wider">
+        <div className="pt-3 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between items-center font-mono uppercase tracking-wider hidden sm:flex">
           <span>A.T.O.M. Core</span>
           <span className="text-amber-400 font-bold animate-pulse">ONLINE</span>
         </div>
       </aside>
 
+      {/* Botão flutuante para REEXIBIR o painel de filtros */}
+      {viewMode === 'map' && !isLeftVisible && (
+        <button
+          onClick={() => setIsLeftVisible(true)}
+          className="absolute top-20 left-3 sm:left-6 z-20 p-2.5 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 text-zinc-300 hover:text-white hover:border-amber-500/50 rounded shadow-xl transition-all duration-300 cursor-pointer flex items-center space-x-2 text-xs uppercase tracking-wider font-semibold animate-fade-in hover:scale-105 active:scale-95 transform-gpu"
+        >
+          <Layers className="w-4 h-4 text-amber-400" />
+          <span className="hidden sm:inline">Exibir Filtros</span>
+        </button>
+      )}
+
       {/* Painel Direito: Painel de Inspeção */}
-      <aside className={`absolute top-20 right-6 bottom-24 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-4 flex flex-col z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
+      <aside className={`absolute top-20 right-3 sm:right-6 bottom-24 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
         viewMode === 'globe' || !isRightVisible
           ? 'translate-x-[450px] opacity-0 pointer-events-none scale-95' 
-          : 'w-72 translate-x-0 opacity-100 scale-100 pointer-events-auto'
+          : 'w-[calc(100%-2.5rem)] sm:w-72 translate-x-0 opacity-100 scale-100 pointer-events-auto'
       }`}>
         <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-800">
           <div className="flex items-center space-x-2">
@@ -186,37 +205,35 @@ function App() {
         </div>
       </aside>
 
-      {/* Botão flutuante para REEXIBIR o painel de inspeção com fade-in suave */}
+      {/* Botão flutuante para REEXIBIR o painel de inspeção (reposicionado no mobile para evitar colisão vertical com os filtros) */}
       {viewMode === 'map' && !isRightVisible && (
         <button
           onClick={() => setIsRightVisible(true)}
-          className="absolute top-20 right-6 z-20 p-2.5 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 text-zinc-300 hover:text-white hover:border-amber-500/50 rounded shadow-xl transition-all duration-300 cursor-pointer flex items-center space-x-2 text-xs uppercase tracking-wider font-semibold animate-fade-in hover:scale-105 active:scale-95 transform-gpu"
+          className="absolute top-32 sm:top-20 right-3 sm:right-6 z-20 p-2.5 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 text-zinc-300 hover:text-white hover:border-amber-500/50 rounded shadow-xl transition-all duration-300 cursor-pointer flex items-center space-x-2 text-xs uppercase tracking-wider font-semibold animate-fade-in hover:scale-105 active:scale-95 transform-gpu"
         >
           <Eye className="w-4 h-4 text-amber-400" />
           <span className="hidden sm:inline">Exibir Inspeção</span>
         </button>
       )}
 
-      {/* ========================================================== */}
-      {/* 4. PAINEL INFERIOR FLUTUANTE (Planejamento de Rotas A*)     */}
-      {/* ========================================================== */}
-      <footer className={`absolute bottom-4 left-6 right-6 h-14 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg px-6 flex items-center justify-between shadow-2xl z-20 transition-all duration-500 ease-out transform-gpu ${
+      {/* 4. PAINEL INFERIOR FLUTUANTE (Planejamento de Rotas A*) */}
+      <footer className={`absolute bottom-3 sm:bottom-4 left-3 sm:left-6 right-3 sm:right-6 h-14 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg px-3 sm:px-6 flex items-center justify-between shadow-2xl z-20 transition-all duration-500 ease-out transform-gpu ${
         viewMode === 'globe' ? 'translate-y-28 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
       }`}>
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-3 sm:space-x-6">
           <div className="flex items-center space-x-2 text-amber-400">
             <Navigation className="w-4 h-4" />
-            <span className="text-xs font-bold tracking-[0.15em] uppercase">Trajeto A*</span>
+            <span className="text-[11px] sm:text-xs font-bold tracking-[0.15em] uppercase">Trajeto A*</span>
           </div>
-          <div className="flex items-center space-x-4 text-xs font-mono">
-            <span className="text-zinc-400">Origem: <strong className="text-zinc-200 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">Não definido</strong></span>
+          <div className="hidden xs:flex items-center space-x-2 sm:space-x-4 text-[11px] sm:text-xs font-mono">
+            <span className="text-zinc-400">Origem: <strong className="text-zinc-200 bg-zinc-900 px-1.5 sm:px-2 py-0.5 rounded border border-zinc-800">Não definido</strong></span>
             <span className="text-zinc-600">➔</span>
-            <span className="text-zinc-400">Destino: <strong className="text-zinc-200 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">Não definido</strong></span>
+            <span className="text-zinc-400">Destino: <strong className="text-zinc-200 bg-zinc-900 px-1.5 sm:px-2 py-0.5 rounded border border-zinc-800">Não definido</strong></span>
           </div>
         </div>
         <button 
           disabled
-          className="px-4 py-1.5 bg-zinc-900 text-zinc-600 text-xs font-semibold rounded border border-zinc-800 cursor-not-allowed uppercase tracking-wider font-mono"
+          className="px-3 sm:px-4 py-1.5 bg-zinc-900 text-zinc-600 text-[11px] sm:text-xs font-semibold rounded border border-zinc-800 cursor-not-allowed uppercase tracking-wider font-mono shrink-0"
         >
           Calcular Rota
         </button>

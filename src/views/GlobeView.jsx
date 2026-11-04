@@ -1,13 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Target, ChevronRight, Compass } from 'lucide-react';
+import { Target, ChevronRight, Compass, X } from 'lucide-react';
+
+// Importação de todas as texturas reais da missão
 import marsTextureFile from '../assets/8k_mars.jpg'; 
+import sunTextureFile from '../assets/8k_sun.jpg';
+import starsTextureFile from '../assets/8k_stars.jpg';
+import phobosTextureFile from '../assets/phobos.jpg';
+import deimosTextureFile from '../assets/deimos.jpg';
+import regionsData from '../api/regions.json'; 
 
 export default function GlobeView({ onSelectSector }) {
   const mountRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isHudVisible, setIsHudVisible] = useState(true); // Estado para controlar a visibilidade do HUD de descida
 
   useEffect(() => {
     const currentMount = mountRef.current;
@@ -35,65 +43,66 @@ export default function GlobeView({ onSelectSector }) {
     controls.maxDistance = 8;
     controls.enablePan = false;
 
-    // 3. Iluminação Espacial e O Sol Visível
+    // 3. Iluminação Espacial e O Sol com Textura Real
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
     const sunPosition = new THREE.Vector3(40, 25, 40);
 
-    const sunLight = new THREE.DirectionalLight(0xfffaed, 1.5);
+    const sunLight = new THREE.DirectionalLight(0xfffaed, 1.8);
     sunLight.position.copy(sunPosition);
     scene.add(sunLight);
 
-    const sunGeo = new THREE.SphereGeometry(3.5, 32, 32);
-    const sunMat = new THREE.MeshBasicMaterial({ color: 0xfffaed });
-    const sunMesh = new THREE.Mesh(sunGeo, sunMat);
-    sunMesh.position.copy(sunPosition);
-    scene.add(sunMesh);
+    const textureLoader = new THREE.TextureLoader();
 
-    const sunGlowGeo = new THREE.SphereGeometry(5.5, 32, 32);
-    const sunGlowMat = new THREE.MeshBasicMaterial({
-      color: 0xf59e0b,
+    // Carregamento de Texturas
+    const marsTexture = textureLoader.load(marsTextureFile, () => setIsLoading(false));
+    const sunTexture = textureLoader.load(sunTextureFile);
+    const starsTexture = textureLoader.load(starsTextureFile);
+    const phobosTexture = textureLoader.load(phobosTextureFile);
+    const deimosTexture = textureLoader.load(deimosTextureFile);
+
+    // Grupo do Sol Realista
+    const sunGroup = new THREE.Group();
+    sunGroup.position.copy(sunPosition);
+    scene.add(sunGroup);
+
+    const sunCoreGeo = new THREE.SphereGeometry(3.5, 32, 32);
+    const sunCoreMat = new THREE.MeshBasicMaterial({ map: sunTexture });
+    const sunCore = new THREE.Mesh(sunCoreGeo, sunCoreMat);
+    sunGroup.add(sunCore);
+
+    const innerCoronaGeo = new THREE.SphereGeometry(4.3, 32, 32);
+    const innerCoronaMat = new THREE.MeshBasicMaterial({
+      color: 0xff8c00,
       transparent: true,
       opacity: 0.35,
       blending: THREE.AdditiveBlending
     });
-    const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
-    sunMesh.add(sunGlow);
+    const innerCorona = new THREE.Mesh(innerCoronaGeo, innerCoronaMat);
+    sunGroup.add(innerCorona);
 
-    // 4. Campo de Estrelas Distantes (Starfield)
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsCount = 2000;
-    const starPositions = new Float32Array(starsCount * 3);
-
-    for (let i = 0; i < starsCount * 3; i++) {
-      starPositions[i] = (Math.random() - 0.5) * 500;
-    }
-
-    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.7,
-      sizeAttenuation: true
+    const outerCoronaGeo = new THREE.SphereGeometry(6.0, 32, 32);
+    const outerCoronaMat = new THREE.MeshBasicMaterial({
+      color: 0xff4500,
+      transparent: true,
+      opacity: 0.15,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide
     });
-    const starField = new THREE.Points(starsGeometry, starsMaterial);
+    const outerCorona = new THREE.Mesh(outerCoronaGeo, outerCoronaMat);
+    sunGroup.add(outerCorona);
+
+    // 4. Skybox de Espaço Profundo com a Textura de Estrelas Real
+    const starsGeo = new THREE.SphereGeometry(450, 32, 32);
+    const starsMat = new THREE.MeshBasicMaterial({
+      map: starsTexture,
+      side: THREE.BackSide
+    });
+    const starField = new THREE.Mesh(starsGeo, starsMat);
     scene.add(starField);
 
-    // 5. Carregamento da Textura utilizando o ficheiro importado do src/assets
-    const textureLoader = new THREE.TextureLoader();
-    const marsTexture = textureLoader.load(
-      marsTextureFile, 
-      () => {
-        setIsLoading(false);
-      },
-      undefined,
-      (error) => {
-        console.error("Erro ao carregar a textura de Marte:", error);
-        setIsLoading(false); 
-      }
-    );
-
-    // 6. Esfera de Marte
+    // 5. Esfera de Marte
     const geometry = new THREE.SphereGeometry(1.5, 64, 64);
     const material = new THREE.MeshStandardMaterial({
       map: marsTexture,
@@ -104,7 +113,7 @@ export default function GlobeView({ onSelectSector }) {
     const marsMesh = new THREE.Mesh(geometry, material);
     scene.add(marsMesh);
 
-    // 7. Atmosfera / Glow nas Bordas do Planeta
+    // 6. Atmosfera / Glow nas Bordas do Planeta
     const atmosGeo = new THREE.SphereGeometry(1.53, 64, 64);
     const atmosMat = new THREE.ShaderMaterial({
       vertexShader: `
@@ -128,34 +137,136 @@ export default function GlobeView({ onSelectSector }) {
     const atmosfera = new THREE.Mesh(atmosGeo, atmosMat);
     scene.add(atmosfera);
 
-    // 8. Ponto Marcador de Arcadia Planitia (Filho de marsMesh para rodar junto)
-    const lat = 40;
-    const lon = 188;
-    const phi = (90 - lat) * (Math.PI / 180);
-    const theta = (lon + 180) * (Math.PI / 180);
-    const radius = 1.5;
+    // ==========================================
+    // 7. LUAS DE MARTE COM TEXTURAS REAIS (FOBOS E DEIMOS)
+    // ==========================================
     
-    const arcadiaPoint = new THREE.Vector3(
-      -radius * Math.sin(phi) * Math.cos(theta),
-      radius * Math.cos(phi),
-      radius * Math.sin(phi) * Math.sin(theta)
-    );
+    const createTextSprite = (message, color = '#f59e0b', fontSize = 28) => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = 512;
+      canvas.height = 128;
+      
+      context.fillStyle = 'rgba(0, 0, 0, 0)';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      context.font = `bold ${fontSize}px monospace`;
+      context.fillStyle = color;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.shadowColor = '#000000';
+      context.shadowBlur = 6;
+      context.fillText(message, canvas.width / 2, canvas.height / 2);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(spriteMaterial);
+      sprite.scale.set(0.55, 0.14, 1);
+      return sprite;
+    };
 
-    const markerGeo = new THREE.SphereGeometry(0.04, 16, 16);
-    const markerMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
-    const markerMesh = new THREE.Mesh(markerGeo, markerMat);
-    markerMesh.position.copy(arcadiaPoint);
-    marsMesh.add(markerMesh);
+    const phobosGeo = new THREE.SphereGeometry(0.06, 16, 16);
+    const phobosMat = new THREE.MeshStandardMaterial({ map: phobosTexture, roughness: 0.9 });
+    const phobosMesh = new THREE.Mesh(phobosGeo, phobosMat);
+    scene.add(phobosMesh);
+    const phobosLabel = createTextSprite('PHOBOS', '#a1a1aa', 24);
+    scene.add(phobosLabel);
 
-    // 9. Animação de Zoom Orbital (Descida)
+    const deimosGeo = new THREE.SphereGeometry(0.045, 16, 16);
+    const deimosMat = new THREE.MeshStandardMaterial({ map: deimosTexture, roughness: 0.9 });
+    const deimosMesh = new THREE.Mesh(deimosGeo, deimosMat);
+    scene.add(deimosMesh);
+    const deimosLabel = createTextSprite('DEIMOS', '#a1a1aa', 24);
+    scene.add(deimosLabel);
+
+    const createOrbitLine = (radius, color) => {
+      const orbitPoints = [];
+      for (let i = 0; i <= 64; i++) {
+        const theta = (i / 64) * Math.PI * 2;
+        orbitPoints.push(new THREE.Vector3(Math.cos(theta) * radius, 0, Math.sin(theta) * radius));
+      }
+      const orbitGeo = new THREE.BufferGeometry().setFromPoints(orbitPoints);
+      const orbitMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.15 });
+      return new THREE.Line(orbitGeo, orbitMat);
+    };
+
+    const phobosOrbitRadius = 2.7;
+    const deimosOrbitRadius = 4.2;
+    scene.add(createOrbitLine(phobosOrbitRadius, 0xf59e0b));
+    scene.add(createOrbitLine(deimosOrbitRadius, 0x38bdf8));
+
+    const latLonToVector3 = (lat, lon, radius) => {
+      const phi = (90 - lat) * (Math.PI / 180);
+      const theta = (lon + 180) * (Math.PI / 180);
+      return new THREE.Vector3(
+        -radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
+    };
+
+    let arcadiaCenterPoint = null;
+    const numSegments = 90;
+
+    // 8. Renderização Dinâmica baseada no JSON (`regions.json`)
+    regionsData.mars_regions.forEach((reg) => {
+      const colorHex = parseInt(reg.color.replace('#', '0x'));
+
+      if (reg.type === 'plain') {
+        const boundaryPoints = [];
+        for (let i = 0; i <= numSegments; i++) {
+          const t = (i / numSegments) * Math.PI * 2;
+          const dLat = reg.geometry.dLatScale * Math.sin(t) + 1.2 * Math.sin(3 * t);
+          const dLon = reg.geometry.dLonScale * Math.cos(t) - 1.5 * Math.sin(2 * t);
+          boundaryPoints.push(latLonToVector3(reg.center.lat + dLat, reg.center.lon + dLon * 1.1, 1.51));
+        }
+
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(boundaryPoints);
+        const lineMat = new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 });
+        const borderMesh = new THREE.LineLoop(lineGeo, lineMat);
+        marsMesh.add(borderMesh);
+
+        if (reg.id === 'arcadia-planitia') {
+          arcadiaCenterPoint = latLonToVector3(reg.center.lat, reg.center.lon, 1.5);
+        }
+      } 
+      else if (reg.type === 'volcano') {
+        const pointCoord = latLonToVector3(reg.center.lat, reg.center.lon, 1.5);
+        const markerGeo = new THREE.SphereGeometry(0.045, 16, 16);
+        const markerMat = new THREE.MeshBasicMaterial({ color: colorHex });
+        const markerMesh = new THREE.Mesh(markerGeo, markerMat);
+        markerMesh.position.copy(pointCoord);
+        marsMesh.add(markerMesh);
+      } 
+      else if (reg.type === 'landing_site') {
+        const pointCoord = latLonToVector3(reg.center.lat, reg.center.lon, 1.52);
+        const siteGeo = new THREE.SphereGeometry(0.02, 16, 16);
+        const siteMat = new THREE.MeshBasicMaterial({ color: colorHex });
+        const siteMesh = new THREE.Mesh(siteGeo, siteMat);
+        siteMesh.position.copy(pointCoord);
+        marsMesh.add(siteMesh);
+      }
+
+      const fontSize = reg.type === 'landing_site' ? 22 : 28;
+      const labelSprite = createTextSprite(reg.name, reg.color, fontSize);
+      const offsetLat = reg.geometry?.labelOffsetLat || 0;
+      labelSprite.position.copy(latLonToVector3(reg.center.lat + offsetLat, reg.center.lon, 1.56));
+      marsMesh.add(labelSprite);
+    });
+
+    if (!arcadiaCenterPoint) {
+      arcadiaCenterPoint = latLonToVector3(46.0, 187.0, 1.5);
+    }
+
+    // 9. Animação de Zoom Orbital (Descida para Arcadia Planitia)
     let zoomTarget = null;
     let startCameraPos = new THREE.Vector3();
 
     window.triggerZoomToArcadia = (callback) => {
-      const worldMarkerPos = new THREE.Vector3();
-      markerMesh.getWorldPosition(worldMarkerPos);
+      const worldCenterPos = new THREE.Vector3();
+      marsMesh.localToWorld(worldCenterPos.copy(arcadiaCenterPoint));
 
-      zoomTarget = worldMarkerPos.clone().multiplyScalar(1.355);
+      zoomTarget = worldCenterPos.clone().multiplyScalar(1.355);
       startCameraPos.copy(camera.position);
       controls.enabled = false;
       setIsAnimating(true);
@@ -172,7 +283,7 @@ export default function GlobeView({ onSelectSector }) {
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
         camera.position.lerpVectors(startCameraPos, zoomTarget, easeProgress);
-        controls.target.lerp(worldMarkerPos, 0.1);
+        controls.target.lerp(worldCenterPos, 0.1);
         controls.update();
 
         renderer.render(scene, camera);
@@ -197,13 +308,33 @@ export default function GlobeView({ onSelectSector }) {
     };
     window.addEventListener('resize', handleResize);
 
+    // 10. Loop de Animação em Câmera Lenta
+    let clock = new THREE.Clock();
     let animationFrameId;
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
+      const elapsedTime = clock.getElapsedTime();
+
       if (!zoomTarget) {
-        marsMesh.rotation.y += 0.0008;
-        atmosfera.rotation.y += 0.0008;
+        marsMesh.rotation.y += 0.00018;
+        atmosfera.rotation.y += 0.00018;
+
+        const pulse = 1 + Math.sin(elapsedTime * 2) * 0.02;
+        sunGroup.scale.set(pulse, pulse, pulse);
+
+        const phobosAngle = elapsedTime * 0.18;
+        phobosMesh.position.x = Math.cos(phobosAngle) * phobosOrbitRadius;
+        phobosMesh.position.z = Math.sin(phobosAngle) * phobosOrbitRadius;
+        phobosMesh.rotation.y += 0.002;
+        phobosLabel.position.set(phobosMesh.position.x, phobosMesh.position.y + 0.18, phobosMesh.position.z);
+
+        const deimosAngle = elapsedTime * 0.07 + 1.5;
+        deimosMesh.position.x = Math.cos(deimosAngle) * deimosOrbitRadius;
+        deimosMesh.position.z = Math.sin(deimosAngle) * deimosOrbitRadius;
+        deimosMesh.rotation.y += 0.001;
+        deimosLabel.position.set(deimosMesh.position.x, deimosMesh.position.y + 0.15, deimosMesh.position.z);
       }
+      
       controls.update();
       renderer.render(scene, camera);
     };
@@ -218,16 +349,20 @@ export default function GlobeView({ onSelectSector }) {
       geometry.dispose();
       material.dispose();
       renderer.dispose();
-      markerGeo.dispose();
-      markerMat.dispose();
       atmosGeo.dispose();
       atmosMat.dispose();
-      starsGeometry.dispose();
-      starsMaterial.dispose();
-      sunGeo.dispose();
-      sunMat.dispose();
-      sunGlowGeo.dispose();
-      sunGlowMat.dispose();
+      starsGeo.dispose();
+      starsMat.dispose();
+      sunCoreGeo.dispose();
+      sunCoreMat.dispose();
+      innerCoronaGeo.dispose();
+      innerCoronaMat.dispose();
+      outerCoronaGeo.dispose();
+      outerCoronaMat.dispose();
+      phobosGeo.dispose();
+      phobosMat.dispose();
+      deimosGeo.dispose();
+      deimosMat.dispose();
     };
   }, []);
 
@@ -260,31 +395,52 @@ export default function GlobeView({ onSelectSector }) {
         </div>
       </div>
 
-      {/* Painel de Telemetria e Alvo */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto">
-        <div className="bg-zinc-950/90 backdrop-blur-xl border border-amber-500/40 p-4 rounded-xl shadow-[0_0_30px_rgba(245,158,11,0.15)] flex items-center space-x-6 max-w-lg w-full animate-fade-in">
-          <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
-            <Target className="w-5 h-5 text-amber-400 animate-pulse" />
-          </div>
-          
-          <div className="flex-1">
-            <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold">Alvo Selecionado: Arcadia Planitia</span>
-            </div>
-            <p className="text-xs text-zinc-300 mt-0.5">Evidências de gelo subterrâneo detetadas. Pronto para iniciar descida orbital.</p>
-          </div>
+      {/* Painel de Telemetria e Alvo com Botão de Fechar */}
+      {isHudVisible ? (
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto max-w-lg w-[calc(100%-2rem)] px-2">
+          <div className="bg-zinc-950/90 backdrop-blur-xl border border-amber-500/40 p-3 sm:p-4 rounded-xl shadow-[0_0_30px_rgba(245,158,11,0.15)] flex items-center justify-between space-x-3 sm:space-x-6 relative animate-fade-in">
+            
+            {/* Botão de Fechar no Canto Superior */}
+            <button 
+              onClick={() => setIsHudVisible(false)}
+              className="absolute -top-2.5 -right-2.5 bg-zinc-900 border border-zinc-700 hover:border-amber-500 text-zinc-400 hover:text-white p-1 rounded-full shadow-lg transition-all duration-200 cursor-pointer"
+              title="Ocultar Telemetria"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
 
-          <button
-            disabled={isAnimating || isLoading}
-            onClick={handleDescerClick}
-            className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center space-x-1.5 active:scale-95 shrink-0 shadow-lg shadow-amber-500/20 disabled:opacity-50"
-          >
-            <span>{isAnimating ? 'A aproximar...' : 'Descer'}</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 animate-pulse" />
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0"></span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold truncate">Alvo Selecionado: Arcadia Planitia</span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-zinc-300 mt-0.5 line-clamp-2">Evidências de gelo subterrâneo detetadas. Pronto para iniciar descida orbital.</p>
+            </div>
+
+            <button
+              disabled={isAnimating || isLoading}
+              onClick={handleDescerClick}
+              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-lg text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center space-x-1 sm:space-x-1.5 active:scale-95 shrink-0 shadow-lg shadow-amber-500/20 disabled:opacity-50"
+            >
+              <span>{isAnimating ? 'A aproximar...' : 'Descer'}</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Botão para reexibir a telemetria caso tenha sido fechada */
+        <button
+          onClick={() => setIsHudVisible(true)}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 px-4 py-2 bg-zinc-950/90 backdrop-blur-md border border-amber-500/40 text-amber-400 rounded-full text-xs font-mono uppercase tracking-widest shadow-xl hover:bg-zinc-900 transition-all duration-300 cursor-pointer flex items-center space-x-2 animate-fade-in"
+        >
+          <Target className="w-3.5 h-3.5" />
+          <span>Exibir Alvo</span>
+        </button>
+      )}
 
       {/* ASSINATURA DO GRUPO: Canto Inferior Direito */}
       <div className="absolute bottom-8 right-8 z-20 pointer-events-none hidden sm:block">
