@@ -19,10 +19,22 @@ import {
 } from 'lucide-react';
 import GlobeView from './views/GlobeView';
 import MapView from './views/MapView';
+import InspectionPanel from './components/InspectionPanel';
+import useLayerManifest from './hooks/useLayerManifest';
+import { FILTERS, DEFAULT_ACTIVE_FILTERS } from './config/mapConfig';
 
 function App() {
   const [viewMode, setViewMode] = useState('globe');
-  const [activeFilter, setActiveFilter] = useState('agua');
+  // Cada filtro liga/desliga sozinho
+  const [activeFilters, setActiveFilters] = useState(DEFAULT_ACTIVE_FILTERS);
+  const toggleFilter = (id) => setActiveFilters((prev) => ({ ...prev, [id]: !prev[id] }));
+  const activeCount = Object.values(activeFilters).filter(Boolean).length;
+
+  // Ponto escolhido no mapa
+  const [selection, setSelection] = useState(null);
+
+  // Camadas exportadas pela equipe de dados
+  const manifest = useLayerManifest();
   
   const [isLeftExpanded, setIsLeftExpanded] = useState(false);
   
@@ -42,6 +54,9 @@ function App() {
       setIsRightVisible(false);
       setIsLeftExpanded(false);
     }
+  };const handleSelectPoint = (point) => {
+      setSelection(point);
+      setIsRightVisible(true); // abre o painel direito ao selecionar algo
   };
 
   return (
@@ -52,7 +67,12 @@ function App() {
         {viewMode === 'globe' ? (
           <GlobeView onSelectSector={() => { setViewMode('map'); setIsRightVisible(true); }} />
         ) : (
-          <MapView activeFilter={activeFilter} />
+          <MapView
+            activeFilters={activeFilters}
+            manifest={manifest}
+            selectedId={selection?.id}
+            onSelectPoint={handleSelectPoint}
+          />
         )}
       </div>
 
@@ -124,42 +144,54 @@ function App() {
             </div>
           </div>
 
-          <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-220px)]">
-            {[
-              { id: 'agua', name: 'Água (Subterrânea)', icon: Droplet, desc: 'Dados SWIM & SHARAD' },
-              { id: 'geologia', name: 'Geologia & Minerais', icon: Mountain, desc: 'Espectroscopia CRISM' },
-              { id: 'radiacao', name: 'Níveis de Radiação', icon: ShieldAlert, desc: 'Instrumento RAD' },
-              { id: 'ventos', name: 'Ventos & Poeira', icon: Wind, desc: 'Mars Climate Sounder' }
-            ].map((filter) => {
-              const IconComponent = filter.icon;
-              const isActive = activeFilter === filter.id;
-              return (
-                <button
-                  key={filter.id}
-                  onClick={() => setActiveFilter(filter.id)}
-                  className={`w-full p-2.5 sm:p-3 rounded text-xs transition-all duration-300 text-left flex flex-col justify-between cursor-pointer border transform-gpu hover:translate-x-1 ${
-                    isActive 
-                      ? 'bg-zinc-900 border-amber-500/50 text-white font-medium shadow-lg shadow-amber-500/5' 
-                      : 'bg-zinc-900/40 border-zinc-800/60 text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200 hover:border-zinc-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center space-x-2.5">
-                      <IconComponent className={`w-4 h-4 transition-colors duration-300 ${isActive ? 'text-amber-400' : 'text-zinc-500'}`} />
-                      <span>{filter.name}</span>
-                    </div>
-                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>}
+          {FILTERS.map((filter) => {
+            const IconComponent = filter.icon;
+            const isActive = Boolean(activeFilters[filter.id]);
+            const layerCount = manifest.layers.filter((l) => l.filter === filter.id).length;
+            return (
+              <button
+                key={filter.id}
+                onClick={() => toggleFilter(filter.id)}
+                aria-pressed={isActive}
+                className={`w-full p-2.5 sm:p-3 rounded text-xs transition-colors duration-200 text-left flex flex-col cursor-pointer border focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 ${
+                  isActive
+                    ? 'bg-zinc-900 text-white font-medium'
+                    : 'bg-zinc-900/40 border-zinc-800/60 text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200 hover:border-zinc-700'
+                }`}
+                style={isActive ? { borderColor: `${filter.color}80` } : undefined}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center space-x-2.5">
+                    <IconComponent className="w-4 h-4" style={{ color: isActive ? filter.color : '#71717a' }} />
+                    <span>{filter.name}</span>
                   </div>
-                  {isLeftExpanded && <span className="text-[10px] text-zinc-500 mt-2 pl-6 font-mono transition-opacity duration-300">{filter.desc}</span>}
-                </button>
-              );
-            })}
-          </div>
+                  {/* Caixa de seleção: mostra que dá para ligar vários */}
+                  <span
+                    className="w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0"
+                    style={{ borderColor: isActive ? filter.color : '#52525b', background: isActive ? filter.color : 'transparent' }}
+                  >
+                    {isActive && (
+                      <svg viewBox="0 0 12 12" className="w-2.5 h-2.5" fill="none" stroke="#09090b" strokeWidth="2.2">
+                        <path d="M2.5 6.2 5 8.5l4.5-5" />
+                      </svg>
+                    )}
+                  </span>
+                </div>
+                {isLeftExpanded && (
+                  <span className="text-[10px] text-zinc-500 mt-2 pl-6 font-mono">
+                    {filter.desc}
+                    <br />
+                    {layerCount > 0 ? `${layerCount} camada(s) exportada(s)` : 'Nenhuma camada exportada ainda'}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <div className="pt-3 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between items-center font-mono uppercase tracking-wider hidden sm:flex">
-          <span>A.T.O.M. Core</span>
-          <span className="text-amber-400 font-bold animate-pulse">ONLINE</span>
+          <span>{activeCount} {activeCount === 1 ? 'camada ligada' : 'camadas ligadas'}</span>
+          <span className="text-amber-400 font-bold">A.T.O.M.</span>
         </div>
       </aside>
 
@@ -194,15 +226,12 @@ function App() {
           </button>
         </div>
 
-        <div className="flex-1 bg-zinc-900/40 border border-zinc-800/60 rounded p-4 flex flex-col items-center justify-center text-center">
-          <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-3 transition-transform duration-300 hover:scale-110">
-            <Search className="w-4 h-4 text-zinc-400" />
-          </div>
-          <p className="text-xs font-medium text-zinc-200 uppercase tracking-wider">Nenhum Ponto Selecionado</p>
-          <p className="text-[11px] text-zinc-500 mt-1 max-w-[180px]">
-            Clique em uma região do mapa para visualizar dados científicos.
-          </p>
-        </div>
+        <InspectionPanel
+          selection={selection}
+          activeFilters={activeFilters}
+          layers={manifest.layers}
+          onClear={() => setSelection(null)}
+        />
       </aside>
 
       {/* Botão flutuante para REEXIBIR o painel de inspeção (reposicionado no mobile para evitar colisão vertical com os filtros) */}

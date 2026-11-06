@@ -1,124 +1,186 @@
-import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import React, { useEffect, useState } from 'react';
+import {
+  MapContainer, TileLayer, ImageOverlay, Marker, Rectangle, Pane, useMap, useMapEvents,
+} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix para os ícones padrão do Leaflet no React
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import { STUDY_AREA, CANDIDATE_SITES, FILTER_BY_ID, FALLBACK_BASEMAP } from '../config/mapConfig';
+import { MOCK_POINTS } from '../mock/points';
 
-// Ícone customizado em estilo HUD/Nasa para os marcadores de telemetria
-const createHudIcon = (color = '#f59e0b') => {
-  return L.divIcon({
-    className: 'custom-hud-marker',
-    html: `
-      <div style="
-        width: 18px;
-        height: 18px;
-        background-color: ${color}20;
-        border: 2px solid ${color};
-        border-radius: 50%;
-        box-shadow: 0 0 12px ${color}aa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      ">
-        <div style="width: 6px; height: 6px; background-color: ${color}; border-radius: 50%;"></div>
-      </div>
-    `,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9]
+// Longitude sempre exibida como leste 0–360°
+const normalizeLon = (lon) => ((lon % 360) + 360) % 360;
+
+// Limite de navegação: um pouco maior que a área, para não se perder no planeta
+const MAX_BOUNDS = [
+  [STUDY_AREA.bounds[0][0] - 3, STUDY_AREA.bounds[0][1] - 4],
+  [STUDY_AREA.bounds[1][0] + 3, STUDY_AREA.bounds[1][1] + 4],
+];
+
+// ---------- Ícones ----------
+const iconCache = new Map();
+
+const pointIcon = (color, selected) => {
+  const key = `p${color}${selected}`;
+  if (!iconCache.has(key)) {
+    iconCache.set(key, L.divIcon({
+      className: '',
+      html: `<span class="ares-marker${selected ? ' is-selected' : ''}" style="--c:${color}"><span></span></span>`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+    }));
+  }
+  return iconCache.get(key);
+};
+
+const siteIcon = (name, selected) => {
+  const key = `s${name}${selected}`;
+  if (!iconCache.has(key)) {
+    iconCache.set(key, L.divIcon({
+      className: '',
+      html: `<span class="ares-site${selected ? ' is-selected' : ''}"><i></i><b>${name}</b></span>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+    }));
+  }
+  return iconCache.get(key);
+};
+
+// ---------- Componentes auxiliares (precisam estar dentro do MapContainer) ----------
+function MapEvents({ onCursor, onMapClick }) {
+  useMapEvents({
+    mousemove: (e) => onCursor(e.latlng),
+    mouseout: () => onCursor(null),
+    click: (e) => onMapClick(e.latlng),
   });
-};
-
-// Coordenadas simuladas para Arcadia Planitia (~39.3°N, 189.7°E)
-const ARCADIA_CENTER = [39.3, -170.3];
-
-// Dados simulados de pontos científicos para testar os filtros
-const MOCK_POINTS = {
-  agua: [
-    { id: 1, lat: 39.5, lng: -170.1, title: 'Reserva SWIM-Alpha', desc: 'Gelo subterrâneo a ~1.2m de profundidade.', alt: 'Plano de Baixa Elevação' },
-    { id: 2, lat: 38.9, lng: -171.2, title: 'Camada de Gelo SHARAD-04', desc: 'Sinal de radar indica purificação de gelo >85%.', alt: 'Borda da Bacia' }
-  ],
-  geologia: [
-    { id: 3, lat: 39.8, lng: -169.5, title: 'Formação Vulcânica Fluvial', desc: 'Depósitos de basalto oleoso e minerais de argila.', alt: 'Planalto Liso' },
-    { id: 4, lat: 38.6, lng: -170.8, title: 'Cratera de Impacto Secundário', desc: 'Ejetos ricos em filosilicatos.', alt: 'Depressão' }
-  ],
-  radiacao: [
-    { id: 5, lat: 39.2, lng: -170.5, title: 'Zona RAD-Safe 01', desc: 'Exposição estimada: 220 mSv/ano (Abaixo da média).', alt: 'Área Protegida por Relevo' }
-  ],
-  ventos: [
-    { id: 6, lat: 39.6, lng: -171.0, title: 'Estação de Monitoramento DUST-X', desc: 'Vento regular de NE a 14 m/s. Acúmulo de poeira baixo.', alt: 'Planície Aberta' }
-  ]
-};
-
-// Componente para redefinir a visão do mapa suavemente ao mudar de setor
-function MapController({ center }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center, 7);
-  }, [center, map]);
   return null;
 }
 
-export default function MapView({ activeFilter, onSelectPoint }) {
-  const currentPoints = MOCK_POINTS[activeFilter] || [];
+function FitStudyArea() {
+  const map = useMap();
+  useEffect(() => {
+    const t = setTimeout(() => {
+      map.invalidateSize();
+      map.fitBounds(STUDY_AREA.bounds, { padding: [40, 40] });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [map]);
+  return null;
+}
+
+// ---------- Mapa ----------
+export default function MapView({ activeFilters, manifest, selectedId, onSelectPoint }) {
+  const [cursor, setCursor] = useState(null);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+
+  const activeIds = Object.keys(activeFilters).filter((id) => activeFilters[id]);
+  const visiblePoints = MOCK_POINTS.filter((p) => activeFilters[p.filter]);
+  const visibleRasters = manifest.layers.filter((l) => activeFilters[l.filter]);
+  const hasBase = Boolean(manifest.base);
+
+  const handleMapClick = (latlng) => {
+    onSelectPoint?.({
+      kind: 'coord',
+      id: `coord-${latlng.lat.toFixed(4)}-${latlng.lng.toFixed(4)}`,
+      lat: latlng.lat,
+      lon: normalizeLon(latlng.lng),
+      activeFilters: activeIds,
+    });
+  };
+
+  // HUD: posição do cursor, ou o centro da área se o mouse estiver fora
+  const hudLat = cursor ? cursor.lat : (STUDY_AREA.bounds[0][0] + STUDY_AREA.bounds[1][0]) / 2;
+  const hudLon = cursor ? cursor.lng : (STUDY_AREA.bounds[0][1] + STUDY_AREA.bounds[1][1]) / 2;
 
   return (
-    <div className="w-full h-full relative bg-[#030303] animate-fade-in">
-      {/* Container Principal do Leaflet */}
-      <MapContainer 
-        center={ARCADIA_CENTER} 
-        zoom={7} 
-        scrollWheelZoom={true}
-        className="w-full h-full z-0 cursor-crosshair"
+    <div className="w-full h-full relative bg-[#0c0806]">
+      <MapContainer
+        bounds={STUDY_AREA.bounds}
+        boundsOptions={{ padding: [40, 40] }}
+        maxBounds={MAX_BOUNDS}
+        maxBoundsViscosity={0.8}
+        minZoom={6}
+        zoomSnap={0.25}
+        maxZoom={13}
+        scrollWheelZoom
         zoomControl={false}
+        className="ares-map w-full h-full z-0 cursor-crosshair"
       >
-        <MapController center={ARCADIA_CENTER} />
+        <FitStudyArea />
+        <MapEvents onCursor={setCursor} onMapClick={handleMapClick} />
 
-        {/* Camada de Mapa Base (Simulando terreno marciano com filtro de cor no CSS) */}
-        <TileLayer
-          attribution='&copy; NASA / USGS / CartoDB'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          className="filter contrast-125 brightness-90 hue-rotate-[330deg] sepia-[0.8]"
-        />
+        {/* 1. Fundo: relevo real, se já exportado; senão, basemap de reserva */}
+        <Pane name="ares-base" style={{ zIndex: 200 }}>
+          {hasBase ? (
+            <ImageOverlay
+              url={manifest.base.url}
+              bounds={manifest.base.bounds}
+              opacity={manifest.base.opacity ?? 1}
+            />
+          ) : (
+            <TileLayer
+              url={FALLBACK_BASEMAP.url}
+              attribution={FALLBACK_BASEMAP.attribution}
+              maxNativeZoom={FALLBACK_BASEMAP.maxNativeZoom}
+              eventHandlers={{ tileerror: () => setFallbackFailed(true) }}
+            />
+          )}
+        </Pane>
 
-        {/* Marcadores de Pontos Científicos conforme o Filtro Ativo */}
-        {currentPoints.map((point) => (
-          <Marker 
-            key={point.id} 
-            position={[point.lat, point.lng]}
-            icon={createHudIcon(activeFilter === 'agua' ? '#f59e0b' : '#eab308')}
-            eventHandlers={{
-              click: () => onSelectPoint && onSelectPoint(point)
-            }}
-          >
-            <Popup className="custom-leaflet-popup">
-              <div className="bg-zinc-950 text-zinc-100 p-2 rounded border border-zinc-800 text-xs font-sans">
-                <div className="font-bold text-amber-400 uppercase tracking-wider mb-1">{point.title}</div>
-                <div className="text-zinc-300 mb-1">{point.desc}</div>
-                <div className="text-[10px] text-zinc-500 font-mono">ELEVAÇÃO: {point.alt}</div>
-              </div>
-            </Popup>
-          </Marker>
+        {/* 2. Camadas científicas: várias podem estar ligadas ao mesmo tempo */}
+        <Pane name="ares-science" style={{ zIndex: 350 }}>
+          {visibleRasters.map((layer) => (
+            <ImageOverlay key={layer.id} url={layer.url} bounds={layer.bounds} opacity={layer.opacity ?? 0.6} />
+          ))}
+        </Pane>
+
+        {/* 3. Contorno da área de estudo */}
+        <Pane name="ares-outline" style={{ zIndex: 450, pointerEvents: 'none' }}>
+          <Rectangle
+            bounds={STUDY_AREA.bounds}
+            interactive={false}
+            pathOptions={{ color: '#f59e0b', weight: 1, dashArray: '6 6', fill: false, opacity: 0.7 }}
+          />
+        </Pane>
+
+        {/* 4. Locais candidatos: sempre visíveis */}
+        {CANDIDATE_SITES.map((site) => (
+          <Marker
+            key={site.id}
+            position={[site.lat, site.lon]}
+            icon={siteIcon(site.name, selectedId === site.id)}
+            eventHandlers={{ click: () => onSelectPoint?.({ kind: 'site', ...site }) }}
+          />
+        ))}
+
+        {/* 5. Pontos dos filtros ligados */}
+        {visiblePoints.map((p) => (
+          <Marker
+            key={p.id}
+            position={[p.lat, p.lon]}
+            icon={pointIcon(FILTER_BY_ID[p.filter].color, selectedId === p.id)}
+            eventHandlers={{ click: () => onSelectPoint?.({ kind: 'point', ...p }) }}
+          />
         ))}
       </MapContainer>
 
-      {/* Grid HUD Sobreposta para Estética NASA */}
-      <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none z-10"></div>
-      
-      {/* Coordenadas HUD Fixas no Canto do Mapa */}
-      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none bg-zinc-950/80 backdrop-blur-md border border-zinc-800/80 px-4 py-1.5 rounded-full text-[10px] font-mono text-zinc-400 tracking-widest uppercase flex items-center space-x-3">
-        <span>SECTOR: <strong>ARCADIA PLANITIA</strong></span>
+      {/* HUD de coordenadas */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 pointer-events-none bg-zinc-950/80 backdrop-blur-md border border-zinc-800/80 px-4 py-1.5 rounded-full text-[10px] font-mono text-zinc-400 tracking-wider flex items-center gap-3 whitespace-nowrap">
+        <span className="hidden sm:inline">ARCADIA PLANITIA</span>
+        <span className="text-zinc-600 hidden sm:inline">|</span>
+        <span>LAT <strong className="text-white tabular-nums">{hudLat.toFixed(3)}°N</strong></span>
         <span className="text-zinc-600">|</span>
-        <span>LAT: <strong className="text-white">39.30° N</strong></span>
-        <span className="text-zinc-600">|</span>
-        <span>LON: <strong className="text-white">170.30° W</strong></span>
+        <span>LON <strong className="text-white tabular-nums">{normalizeLon(hudLon).toFixed(3)}°E</strong></span>
       </div>
+
+      {/* Aviso enquanto o relevo da área não foi exportado */}
+      {manifest.status !== 'loading' && !hasBase && (
+        <div className="absolute top-[7.5rem] left-1/2 -translate-x-1/2 z-10 pointer-events-none max-w-[90%] text-center text-[10px] text-amber-300/90 bg-zinc-950/80 border border-amber-500/30 rounded px-3 py-1">
+          {fallbackFailed
+            ? 'Mapa base indisponível. A equipe de dados precisa exportar o relevo da área.'
+            : 'Mapa base global provisório. O relevo detalhado da área ainda não foi exportado.'}
+        </div>
+      )}
     </div>
   );
 }
