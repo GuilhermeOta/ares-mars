@@ -69,13 +69,13 @@ function FitStudyArea() {
 }
 
 // ---------- Mapa ----------
-export default function MapView({ activeFilters, manifest, selectedId, onSelectPoint }) {
+export default function MapView({ activeFilters, activeLayers, manifest, selectedId, onSelectPoint }) {
   const [cursor, setCursor] = useState(null);
   const [fallbackFailed, setFallbackFailed] = useState(false);
 
   const activeIds = Object.keys(activeFilters).filter((id) => activeFilters[id]);
   const visiblePoints = MOCK_POINTS.filter((p) => activeFilters[p.filter]);
-  const visibleRasters = manifest.layers.filter((l) => activeFilters[l.filter]);
+  const visibleRasters = manifest.layers.filter((l) => activeLayers[l.id]);
   const hasBase = Boolean(manifest.base);
 
   const handleMapClick = (latlng) => {

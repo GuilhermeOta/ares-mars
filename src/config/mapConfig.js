@@ -1,8 +1,12 @@
-import { Droplet, Mountain, ShieldAlert, Wind } from 'lucide-react';
+import { LifeBuoy, Mountain, Wind } from 'lucide-react';
 
-// Convenção do projeto: latitude °N e longitude LESTE de 0 a 360°.
+// ============================================================
+// CONVENÇÃO DE COORDENADAS DO PROJETO
+// Latitude °N e longitude LESTE de 0 a 360°,
+// a mesma usada pela equipe de dados nos gráficos de rota.
+// ============================================================
 
-// Mesmo recorte dos mapas de elevação/rotas do Saulo.
+// Área de estudo: mesmo recorte dos mapas de elevação/rotas do Saulo.
 export const STUDY_AREA = {
   name: 'Arcadia Planitia — setor AP',
   bounds: [
@@ -11,25 +15,62 @@ export const STUDY_AREA = {
   ],
 };
 
+// Locais candidatos definidos pela equipe de dados
 export const CANDIDATE_SITES = [
   { id: 'ap-1', name: 'AP-1', lat: 39.8, lon: 202.1 },
   { id: 'ap-8', name: 'AP-8', lat: 40.75, lon: 201.3 },
   { id: 'ap-9', name: 'AP-9', lat: 40.02, lon: 203.35 },
 ];
 
+// ============================================================
+// FILTROS (pastas) E SUBFILTROS (camadas)
+// Os filtros só organizam: o usuário abre a pasta e escolhe
+// UM subfiltro por vez. O `id` do subfiltro é o MESMO `--id`
+// usado pela equipe de dados ao exportar a camada.
+// `group` (opcional) cria um subtítulo dentro da pasta.
+// ============================================================
 export const FILTERS = [
-  { id: 'agua', name: 'Água (subterrânea)', icon: Droplet, color: '#38bdf8', desc: 'SWIM, SHARAD, HiRISE' },
-  { id: 'geologia', name: 'Geologia e minerais', icon: Mountain, color: '#f97316', desc: 'CRISM, TES, HiRISE, CTX' },
-  { id: 'radiacao', name: 'Radiação', icon: ShieldAlert, color: '#ef4444', desc: 'Modelos + RAD (Gale, referência)' },
-  { id: 'ventos', name: 'Ventos e poeira', icon: Wind, color: '#eab308', desc: 'Mars Climate Database, MCS' },
+  {
+    id: 'geologia', name: 'Geologia', icon: Mountain, color: '#f97316',
+    layers: [
+      { id: 'elevacao', name: 'Relevo e altitude', unit: 'm', source: 'MOLA' },
+      { id: 'declividade', name: 'Inclinação do terreno', unit: '°', source: 'MOLA' },
+      { id: 'silica-vidro', group: 'Composição mineralógica', name: 'Silicatos em lâmina / vidro (alto Si)', source: 'TES' },
+      { id: 'quartzo', group: 'Composição mineralógica', name: 'Quartzo', source: 'TES' },
+      { id: 'k-feldspato', group: 'Composição mineralógica', name: 'K-feldspato', source: 'TES' },
+    ],
+  },
+  {
+    id: 'atmosfera', name: 'Condições atmosféricas', icon: Wind, color: '#eab308',
+    layers: [
+      { id: 'mcd-temperatura', name: 'Temperatura', unit: 'K', source: 'Mars Climate Database' },
+      { id: 'mcd-pressao', name: 'Pressão atmosférica', unit: 'Pa', source: 'Mars Climate Database' },
+      { id: 'raios-cosmicos', name: 'Radiação', unit: 'rem/ano', source: 'Modelo global' },
+      { id: 'mcd-ventos', name: 'Ventos', unit: 'm/s', source: 'Mars Climate Database' },
+      { id: 'indice-poeira', name: 'Índices de poeira', source: 'TES / MCS' },
+    ],
+  },
+  {
+    id: 'suporte-vida', name: 'Suporte à vida', icon: LifeBuoy, color: '#38bdf8',
+    layers: [
+      { id: 'disponibilidade-agua', name: 'Disponibilidade de água', source: 'SWIM' },
+      { id: 'estabilidade-terreno', name: 'Estabilidade do terreno', source: 'A definir' },
+      { id: 'atividade-vulcanica', name: 'Atividade vulcânica', source: 'A definir' },
+    ],
+  },
 ];
 
-// Atalho: FILTER_BY_ID.agua → objeto do filtro de água
 export const FILTER_BY_ID = Object.fromEntries(FILTERS.map((f) => [f.id, f]));
 
-export const DEFAULT_ACTIVE_FILTERS = { agua: true, geologia: false, radiacao: false, ventos: false };
+// Atalho: LAYER_BY_ID['mcd-pressao'] → { id, name, unit, source, filter: 'atmosfera' }
+export const LAYER_BY_ID = Object.fromEntries(
+  FILTERS.flatMap((f) => f.layers.map((l) => [l.id, { ...l, filter: f.id }]))
+);
 
-// Onde a equipe de dados vai colocar as camadas exportadas
+// Subfiltro ligado quando o mapa abre (null = nenhum)
+export const DEFAULT_ACTIVE_LAYER = 'disponibilidade-agua';
+
+// Onde a equipe de dados publica as camadas (pasta public/data/layers)
 export const LAYERS_MANIFEST_URL = `${import.meta.env.BASE_URL}data/layers/manifest.json`;
 
 // Mapa base de reserva enquanto o relevo da área não é exportado
