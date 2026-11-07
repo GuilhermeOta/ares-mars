@@ -1,40 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Globe, 
-  Map, 
-  Layers, 
-  Maximize2, 
-  Minimize2, 
-  EyeOff, 
-  Eye, 
-  Navigation, 
-  Activity, 
-  Compass, 
-  Search, 
-  ShieldAlert, 
-  Wind, 
-  Droplet, 
-  Mountain,
+import React, { useMemo, useState } from 'react';
+import {
+  Globe,
+  Layers,
+  Maximize2,
+  Minimize2,
+  EyeOff,
+  Eye,
+  Navigation,
+  Activity,
+  Compass,
   X
 } from 'lucide-react';
 import GlobeView from './views/GlobeView';
 import MapView from './views/MapView';
 import InspectionPanel from './components/InspectionPanel';
+import FilterList from './components/FilterList';
 import useLayerManifest from './hooks/useLayerManifest';
-import { FILTERS, DEFAULT_ACTIVE_FILTERS } from './config/mapConfig';
+import { FILTERS, LAYER_BY_ID, DEFAULT_ACTIVE_LAYER } from './config/mapConfig';
 
 function App() {
   const [viewMode, setViewMode] = useState('globe');
-  // Cada filtro liga/desliga sozinho
-  const [activeFilters, setActiveFilters] = useState(DEFAULT_ACTIVE_FILTERS);
-  const toggleFilter = (id) => setActiveFilters((prev) => ({ ...prev, [id]: !prev[id] }));
-  const activeCount = Object.values(activeFilters).filter(Boolean).length;
+  // Cada SUBFILTRO liga/desliga sozinho
+    // Só UM subfiltro ligado por vez (ou nenhum: null)
+  const [activeLayerId, setActiveLayerId] = useState(DEFAULT_ACTIVE_LAYER);
+  // Clicar no subfiltro ligado desliga; clicar em outro troca
+  const selectLayer = (id) => setActiveLayerId((prev) => (prev === id ? null : id));
 
+  // Mesmo formato de antes ({ 'swim-ci': true }), para o mapa e o painel não mudarem
+  const activeLayers = useMemo(() => (activeLayerId ? { [activeLayerId]: true } : {}), [activeLayerId]);
+
+  // Liga ou desliga todos os subfiltros de um grupo de uma vez
+  const setFilterLayers = (filter, on) =>
+    setActiveLayers((prev) => {
+      const next = { ...prev };
+      filter.layers.forEach((l) => { next[l.id] = on; });
+      return next;
+    });
+
+  // Um filtro conta como "ligado" se pelo menos um subfiltro dele estiver ligado
+  const activeFilters = useMemo(
+    () => Object.fromEntries(FILTERS.map((f) => [f.id, f.layers.some((l) => activeLayers[l.id])])),
+    [activeLayers]
+  );
+  const activeLayerName = activeLayerId ? LAYER_BY_ID[activeLayerId]?.name : null;
   // Ponto escolhido no mapa
   const [selection, setSelection] = useState(null);
 
   // Camadas exportadas pela equipe de dados
   const manifest = useLayerManifest();
+  // Subfiltros que já têm imagem exportada (o resto mostra "sem dados")
+  const exportedIds = useMemo(() => new Set(manifest.layers.map((l) => l.id)), [manifest]);
   
   const [isLeftExpanded, setIsLeftExpanded] = useState(false);
   
@@ -48,7 +63,6 @@ function App() {
     setViewMode(newMode);
     
     if (newMode === 'map') {
-      const isMobile = window.innerWidth < 640;
       // Mantém desabilitados por padrão no mobile e desktop ao alternar
       setIsLeftVisible(false);
       setIsRightVisible(false);
@@ -56,8 +70,10 @@ function App() {
     }
   };const handleSelectPoint = (point) => {
       setSelection(point);
-      setIsRightVisible(true); // abre o painel direito ao selecionar algo
-  };
+      setIsRightVisible(true);
+      // Em telas estreitas, abrir a inspeção fecha os filtros
+      if (window.innerWidth < 1024) setIsLeftVisible(false);
+    };
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-black text-zinc-100 overflow-hidden select-none font-sans">
@@ -69,6 +85,7 @@ function App() {
         ) : (
           <MapView
             activeFilters={activeFilters}
+            activeLayers={activeLayers}
             manifest={manifest}
             selectedId={selection?.id}
             onSelectPoint={handleSelectPoint}
@@ -115,12 +132,14 @@ function App() {
       {/* 3. PAINÉIS LATERAIS FLUTUANTES */}
       
       {/* Menu Esquerdo: Filtros Científicos */}
+            {/* Menu Esquerdo: Filtros Científicos */}
       <aside className={`absolute top-20 left-3 sm:left-6 bottom-24 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col justify-between z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
         viewMode === 'globe' || !isLeftVisible
           ? '-translate-x-[450px] opacity-0 pointer-events-none scale-95' 
           : `${isLeftExpanded ? 'w-[calc(100%-2.5rem)] sm:w-80' : 'w-[calc(100%-2.5rem)] sm:w-64'} translate-x-0 opacity-100 scale-100 pointer-events-auto`
       }`}>
-        <div>
+        {/* Esta div ocupa o espaço que sobra e deixa a lista rolar */}
+        <div className="flex-1 min-h-0 flex flex-col">
           <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 border-b border-zinc-800">
             <div className="flex items-center space-x-2">
               <Layers className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-180" />
@@ -144,53 +163,18 @@ function App() {
             </div>
           </div>
 
-          {FILTERS.map((filter) => {
-            const IconComponent = filter.icon;
-            const isActive = Boolean(activeFilters[filter.id]);
-            const layerCount = manifest.layers.filter((l) => l.filter === filter.id).length;
-            return (
-              <button
-                key={filter.id}
-                onClick={() => toggleFilter(filter.id)}
-                aria-pressed={isActive}
-                className={`w-full p-2.5 sm:p-3 rounded text-xs transition-colors duration-200 text-left flex flex-col cursor-pointer border focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 ${
-                  isActive
-                    ? 'bg-zinc-900 text-white font-medium'
-                    : 'bg-zinc-900/40 border-zinc-800/60 text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-200 hover:border-zinc-700'
-                }`}
-                style={isActive ? { borderColor: `${filter.color}80` } : undefined}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center space-x-2.5">
-                    <IconComponent className="w-4 h-4" style={{ color: isActive ? filter.color : '#71717a' }} />
-                    <span>{filter.name}</span>
-                  </div>
-                  {/* Caixa de seleção: mostra que dá para ligar vários */}
-                  <span
-                    className="w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0"
-                    style={{ borderColor: isActive ? filter.color : '#52525b', background: isActive ? filter.color : 'transparent' }}
-                  >
-                    {isActive && (
-                      <svg viewBox="0 0 12 12" className="w-2.5 h-2.5" fill="none" stroke="#09090b" strokeWidth="2.2">
-                        <path d="M2.5 6.2 5 8.5l4.5-5" />
-                      </svg>
-                    )}
-                  </span>
-                </div>
-                {isLeftExpanded && (
-                  <span className="text-[10px] text-zinc-500 mt-2 pl-6 font-mono">
-                    {filter.desc}
-                    <br />
-                    {layerCount > 0 ? `${layerCount} camada(s) exportada(s)` : 'Nenhuma camada exportada ainda'}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+          {/* Área com rolagem: só a lista rola, o título e o rodapé ficam fixos */}
+          <div className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1 -mr-1">
+            <FilterList
+              activeLayerId={activeLayerId}
+              exportedIds={exportedIds}
+              onSelectLayer={selectLayer}
+            />
+          </div>
         </div>
 
         <div className="pt-3 border-t border-zinc-800 text-[10px] text-zinc-500 flex justify-between items-center font-mono uppercase tracking-wider hidden sm:flex">
-          <span>{activeCount} {activeCount === 1 ? 'camada ligada' : 'camadas ligadas'}</span>
+          <span className="truncate mr-2">{activeLayerName || 'Nenhuma camada'}</span>
           <span className="text-amber-400 font-bold">A.T.O.M.</span>
         </div>
       </aside>
@@ -198,7 +182,10 @@ function App() {
       {/* Botão flutuante para REEXIBIR o painel de filtros */}
       {viewMode === 'map' && !isLeftVisible && (
         <button
-          onClick={() => setIsLeftVisible(true)}
+          onClick={() => {
+            setIsLeftVisible(true);
+            if (window.innerWidth < 1024) setIsRightVisible(false);
+          }}
           className="absolute top-20 left-3 sm:left-6 z-20 p-2.5 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 text-zinc-300 hover:text-white hover:border-amber-500/50 rounded shadow-xl transition-all duration-300 cursor-pointer flex items-center space-x-2 text-xs uppercase tracking-wider font-semibold animate-fade-in hover:scale-105 active:scale-95 transform-gpu"
         >
           <Layers className="w-4 h-4 text-amber-400" />
@@ -228,7 +215,7 @@ function App() {
 
         <InspectionPanel
           selection={selection}
-          activeFilters={activeFilters}
+          activeLayers={activeLayers}
           layers={manifest.layers}
           onClear={() => setSelection(null)}
         />

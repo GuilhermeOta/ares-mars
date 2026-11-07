@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Target, ChevronRight, Compass, X } from 'lucide-react';
+import { Target, ChevronRight, Compass, X, Settings2 } from 'lucide-react';
 
 // Importação de todas as texturas reais da missão
 import marsTextureFile from '../assets/8k_mars.jpg'; 
@@ -11,8 +11,26 @@ import phobosTextureFile from '../assets/phobos.jpg';
 import deimosTextureFile from '../assets/deimos.jpg';
 import regionsData from '../api/regions.json'; 
 
+// ---------- Configurações da câmera ----------
+const CAMERA_MIN_DISTANCE = 2.5;  // o mais perto (Marte tem raio 1.5)
+const CAMERA_MAX_DISTANCE = 30;   // o mais longe (o Sol está a ~62; não passe de ~50)
+const SENSITIVITY_KEY = 'ares-sensibilidade-camera';
+
+// Lê a sensibilidade salva no navegador (1 = padrão)
+const loadSensitivity = () => {
+  try {
+    const v = parseFloat(localStorage.getItem(SENSITIVITY_KEY));
+    return Number.isFinite(v) ? v : 1;
+  } catch {
+    return 1;
+  }
+};
+
 export default function GlobeView({ onSelectSector }) {
   const mountRef = useRef(null);
+  const controlsRef = useRef(null); // acesso aos controles fora do useEffect
+  const [sensitivity, setSensitivity] = useState(loadSensitivity);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isHudVisible, setIsHudVisible] = useState(true); // Estado para controlar a visibilidade do HUD de descida
@@ -39,9 +57,10 @@ export default function GlobeView({ onSelectSector }) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance = 2.5;
-    controls.maxDistance = 8;
+    controls.minDistance = CAMERA_MIN_DISTANCE;
+    controls.maxDistance = CAMERA_MAX_DISTANCE;
     controls.enablePan = false;
+    controlsRef.current = controls;
 
     // 3. Iluminação Espacial e O Sol com Textura Real
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -272,7 +291,7 @@ export default function GlobeView({ onSelectSector }) {
       setIsAnimating(true);
 
       let startTime = performance.now();
-      const duration = 1200;
+      const duration = 1200 + startCameraPos.length() * 30;
 
       const animateZoom = (now) => {
         let elapsed = now - startTime;
@@ -309,11 +328,12 @@ export default function GlobeView({ onSelectSector }) {
     window.addEventListener('resize', handleResize);
 
     // 10. Loop de Animação em Câmera Lenta
-    let clock = new THREE.Clock();
+    let clock = new THREE.Timer();
     let animationFrameId;
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      clock.update();
+      const elapsedTime = clock.getElapsed();
 
       if (!zoomTarget) {
         marsMesh.rotation.y += 0.00018;
@@ -365,7 +385,18 @@ export default function GlobeView({ onSelectSector }) {
       deimosMat.dispose();
     };
   }, []);
-
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (controls) {
+      controls.rotateSpeed = sensitivity;
+      controls.zoomSpeed = sensitivity;
+    }
+    try {
+      localStorage.setItem(SENSITIVITY_KEY, String(sensitivity));
+    } catch {
+      // navegador sem armazenamento: só não salva
+    }
+  }, [sensitivity]);
   const handleDescerClick = () => {
     if (window.triggerZoomToArcadia) {
       window.triggerZoomToArcadia(onSelectSector);
@@ -441,7 +472,49 @@ export default function GlobeView({ onSelectSector }) {
           <span>Exibir Alvo</span>
         </button>
       )}
+      {/* CONFIGURAÇÕES DA CÂMERA: Canto Superior Esquerdo */}
+      <div className="absolute top-20 left-3 sm:left-6 z-20">
+        <button
+          onClick={() => setIsSettingsOpen((v) => !v)}
+          aria-expanded={isSettingsOpen}
+          title="Configurações da câmera"
+          className="p-2.5 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 text-zinc-300 hover:text-white hover:border-amber-500/50 rounded shadow-xl transition-colors duration-200 cursor-pointer flex items-center space-x-2 text-xs uppercase tracking-wider font-semibold"
+        >
+          <Settings2 className="w-4 h-4 text-amber-400" />
+          <span className="hidden sm:inline">Câmera</span>
+        </button>
 
+        {isSettingsOpen && (
+          <div className="mt-2 w-60 bg-zinc-950/95 backdrop-blur-md border border-zinc-800 rounded-lg p-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="sens" className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider">
+                Sensibilidade
+              </label>
+              <span className="text-[11px] font-mono text-amber-400 tabular-nums">{sensitivity.toFixed(1)}×</span>
+            </div>
+            <input
+              id="sens"
+              type="range"
+              min="0.2"
+              max="3"
+              step="0.1"
+              value={sensitivity}
+              onChange={(e) => setSensitivity(parseFloat(e.target.value))}
+              className="w-full accent-amber-500 cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-zinc-500 mt-1">
+              <span>Lenta</span>
+              <span>Rápida</span>
+            </div>
+            <button
+              onClick={() => setSensitivity(1)}
+              className="mt-3 w-full text-[10px] font-mono uppercase tracking-wider text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded py-1.5 cursor-pointer"
+            >
+              Restaurar padrão
+            </button>
+          </div>
+        )}
+      </div>
       {/* ASSINATURA DO GRUPO: Canto Inferior Direito */}
       <div className="absolute bottom-8 right-8 z-20 pointer-events-none hidden sm:block">
         <div className="bg-zinc-950/80 backdrop-blur-md border border-amber-500/30 px-3.5 py-2 rounded-lg shadow-lg flex items-center space-x-2">
