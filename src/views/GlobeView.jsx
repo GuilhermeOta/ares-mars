@@ -4,9 +4,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Target, ChevronRight, Compass, X, Settings2 } from 'lucide-react';
 
 // Importação de todas as texturas reais da missão
-import marsTextureFile from '../assets/8k_mars.jpg'; 
-import sunTextureFile from '../assets/8k_sun.jpg';
-import starsTextureFile from '../assets/8k_stars.jpg';
+import mars2k from '../assets/2k_mars.jpg';
+import sun2k from '../assets/2k_sun.jpg';
+import stars2k from '../assets/2k_stars.jpg';
+import mars8k from '../assets/8k_mars.jpg';
+import sun8k from '../assets/8k_sun.jpg';
+import stars8k from '../assets/8k_stars.jpg';
 import phobosTextureFile from '../assets/phobos.jpg';
 import deimosTextureFile from '../assets/deimos.jpg';
 import regionsData from '../api/regions.json'; 
@@ -15,6 +18,23 @@ import regionsData from '../api/regions.json';
 const CAMERA_MIN_DISTANCE = 2.5;  // o mais perto (Marte tem raio 1.5)
 const CAMERA_MAX_DISTANCE = 30;   // o mais longe (o Sol está a ~62; não passe de ~50)
 const SENSITIVITY_KEY = 'ares-sensibilidade-camera';
+
+// ---------- Qualidade das texturas ----------
+// 2K é o padrão (~1,8 MB, leve para celular); 8K é opcional (~14 MB).
+const TEXTURES = {
+  '2k': { mars: mars2k, sun: sun2k, stars: stars2k },
+  '8k': { mars: mars8k, sun: sun8k, stars: stars8k },
+};
+const HD_KEY = 'ares-texturas-8k';
+
+// Lê do navegador se o usuário deixou o 8K ligado (padrão: desligado)
+const loadHd = () => {
+  try {
+    return localStorage.getItem(HD_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
 
 // Lê a sensibilidade salva no navegador (1 = padrão)
 const loadSensitivity = () => {
@@ -31,6 +51,10 @@ export default function GlobeView({ onSelectSector }) {
   const controlsRef = useRef(null); // acesso aos controles fora do useEffect
   const [sensitivity, setSensitivity] = useState(loadSensitivity);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [hdTextures, setHdTextures] = useState(loadHd);
+  const [isLoadingHd, setIsLoadingHd] = useState(false);
+  const materialsRef = useRef(null);  // materiais de Marte, Sol e estrelas
+  const qualityRef = useRef(null);    // qualidade que está na tela agora
   const [isLoading, setIsLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isHudVisible, setIsHudVisible] = useState(true); // Estado para controlar a visibilidade do HUD de descida
@@ -74,10 +98,13 @@ export default function GlobeView({ onSelectSector }) {
 
     const textureLoader = new THREE.TextureLoader();
 
-    // Carregamento de Texturas
-    const marsTexture = textureLoader.load(marsTextureFile, () => setIsLoading(false));
-    const sunTexture = textureLoader.load(sunTextureFile);
-    const starsTexture = textureLoader.load(starsTextureFile);
+    // Carrega na qualidade escolhida pelo usuário (2K na primeira visita)
+    const initialQuality = loadHd() ? '8k' : '2k';
+    qualityRef.current = initialQuality;
+    const initialSet = TEXTURES[initialQuality];
+    const marsTexture = textureLoader.load(initialSet.mars, () => setIsLoading(false));
+    const sunTexture = textureLoader.load(initialSet.sun);
+    const starsTexture = textureLoader.load(initialSet.stars);
     const phobosTexture = textureLoader.load(phobosTextureFile);
     const deimosTexture = textureLoader.load(deimosTextureFile);
 
@@ -130,6 +157,7 @@ export default function GlobeView({ onSelectSector }) {
     });
 
     const marsMesh = new THREE.Mesh(geometry, material);
+    materialsRef.current = { mars: material, sun: sunCoreMat, stars: starsMat };
     scene.add(marsMesh);
 
     // 6. Atmosfera / Glow nas Bordas do Planeta
@@ -361,6 +389,7 @@ export default function GlobeView({ onSelectSector }) {
     animate();
 
     return () => {
+      materialsRef.current = null; // a cena vai ser destruída
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
       if (currentMount) {
@@ -397,6 +426,52 @@ export default function GlobeView({ onSelectSector }) {
       // navegador sem armazenamento: só não salva
     }
   }, [sensitivity]);
+  // Troca as texturas quando o usuário liga/desliga o 8K
+  useEffect(() => {
+    const quality = hdTextures ? '8k' : '2k';
+    try {
+      localStorage.setItem(HD_KEY, hdTextures ? '1' : '0');
+    } catch {
+      // navegador sem armazenamento: só não salva
+    }
+
+    const mats = materialsRef.current;
+    if (!mats || qualityRef.current === quality) return; // já está na qualidade certa
+
+    let cancelled = false;
+    setIsLoadingHd(true);
+    const loader = new THREE.TextureLoader();
+    const set = TEXTURES[quality];
+
+    // Baixa as três texturas e só troca quando todas chegarem (sem "piscar")
+    Promise.all([loader.loadAsync(set.mars), loader.loadAsync(set.sun), loader.loadAsync(set.stars)])
+      .then(([mars, sun, stars]) => {
+        if (cancelled) {
+          [mars, sun, stars].forEach((t) => t.dispose());
+          return;
+        }
+        const swap = (mat, tex) => {
+          const old = mat.map;
+          mat.map = tex;
+          mat.needsUpdate = true;
+          old?.dispose(); // libera a textura antiga da memória da placa de vídeo
+        };
+        swap(mats.mars, mars);
+        swap(mats.sun, sun);
+        swap(mats.stars, stars);
+        qualityRef.current = quality;
+      })
+      .catch(() => {
+        if (!cancelled) setHdTextures(qualityRef.current === '8k'); // falhou: volta o botão
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingHd(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hdTextures]);
   const handleDescerClick = () => {
     if (window.triggerZoomToArcadia) {
       window.triggerZoomToArcadia(onSelectSector);
@@ -512,6 +587,37 @@ export default function GlobeView({ onSelectSector }) {
             >
               Restaurar padrão
             </button>
+                        {/* Qualidade das texturas */}
+            <div className="mt-4 pt-3 border-t border-zinc-800">
+              <button
+                role="switch"
+                aria-checked={hdTextures}
+                disabled={isLoadingHd}
+                onClick={() => setHdTextures((v) => !v)}
+                className="w-full flex items-center justify-between cursor-pointer disabled:cursor-wait"
+              >
+                <span className="text-[11px] font-semibold text-zinc-200 uppercase tracking-wider">
+                  Texturas 8K
+                </span>
+                {/* Interruptor */}
+                <span
+                  className={`w-8 h-4 rounded-full relative transition-colors duration-200 ${
+                    hdTextures ? 'bg-amber-500' : 'bg-zinc-700'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all duration-200 ${
+                      hdTextures ? 'left-4' : 'left-0.5'
+                    }`}
+                  />
+                </span>
+              </button>
+              <p className="text-[10px] text-zinc-500 mt-1.5 leading-snug">
+                {isLoadingHd
+                  ? 'Carregando texturas...'
+                  : 'Mais detalhe, mas baixa ~14 MB. Recomendado só para computador.'}
+              </p>
+            </div>
           </div>
         )}
       </div>
