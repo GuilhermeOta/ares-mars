@@ -38,6 +38,7 @@ export const FILTERS = [
       { id: 'silica-vidro', group: 'Composição mineralógica', name: 'Silicatos em lâmina / vidro (alto Si)', source: 'TES' },
       { id: 'quartzo', group: 'Composição mineralógica', name: 'Quartzo', source: 'TES' },
       { id: 'k-feldspato', group: 'Composição mineralógica', name: 'K-feldspato', source: 'TES' },
+      { id: 'poeira-superficial', group: 'Composição mineralógica', name: 'Poeira superficial', source: 'TES' },
     ],
   },
   {
@@ -47,15 +48,22 @@ export const FILTERS = [
       { id: 'mcd-pressao', name: 'Pressão atmosférica', unit: 'Pa', source: 'Mars Climate Database' },
       { id: 'raios-cosmicos', name: 'Radiação', unit: 'rem/ano', source: 'Modelo global' },
       { id: 'mcd-ventos', name: 'Ventos', unit: 'm/s', source: 'Mars Climate Database' },
-      { id: 'indice-poeira', name: 'Índices de poeira', source: 'TES / MCS' },
+      { id: 'indice-poeira', name: 'Índices de poeira', source: 'Mars Climate Database / MCS' },
+      { id: 'mcd-densidade', name: 'Densidade', unit: 'kg/m³', source: 'Mars Climate Database' },
     ],
   },
   {
     id: 'suporte-vida', name: 'Suporte à vida', icon: LifeBuoy, color: '#38bdf8',
     layers: [
-      { id: 'disponibilidade-agua', name: 'Disponibilidade de água', source: 'SWIM' },
-      { id: 'estabilidade-terreno', name: 'Estabilidade do terreno', source: 'A definir' },
-      { id: 'atividade-vulcanica', name: 'Atividade vulcânica', source: 'A definir' },
+      { id: 'swim-ci', group: 'Disponibilidade de água', name: 'Consistência do gelo', source: 'SWIM' },
+      { id: 'swim-reflectors', group: 'Disponibilidade de água', name: 'Refletores de radar profundos', source: 'SHARAD / SWIM' },
+      { id: 'swim-radar-power', group: 'Disponibilidade de água', name: 'Potência do radar na superfície', source: 'SHARAD / SWIM' },
+      { id: 'swim-dielectric', group: 'Disponibilidade de água', name: 'Propriedades dielétricas', source: 'SHARAD / SWIM' },
+      { id: 'swim-thermal', group: 'Disponibilidade de água', name: 'Análise térmica', source: 'SWIM' },
+      { id: 'swim-geomorph', group: 'Disponibilidade de água', name: 'Geomorfologia', source: 'SWIM' },
+      { id: 'rugosidade', group: 'Estabilidade do terreno', name: 'Rugosidade (TRI)', unit: 'm', source: 'MOLA' },
+      { id: 'rochas-irtm', group: 'Estabilidade do terreno', name: 'Abundância de rochas', unit: '%', source: 'Viking IRTM' },
+      { id: 'atividade-vulcanica', group: 'Atividade vulcânica', name: 'Evidências de vulcanismo', source: 'A definir' },
     ],
   },
 ];
@@ -68,7 +76,7 @@ export const LAYER_BY_ID = Object.fromEntries(
 );
 
 // Subfiltro ligado quando o mapa abre (null = nenhum)
-export const DEFAULT_ACTIVE_LAYER = 'disponibilidade-agua';
+export const DEFAULT_ACTIVE_LAYER = 'swim-ci';
 
 // Onde a equipe de dados publica as camadas (pasta public/data/layers)
 export const LAYERS_MANIFEST_URL = `${import.meta.env.BASE_URL}data/layers/manifest.json`;
