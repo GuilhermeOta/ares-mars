@@ -6,7 +6,6 @@ import {
   Minimize2,
   EyeOff,
   Eye,
-  Navigation,
   Activity,
   Compass,
   X
@@ -15,13 +14,14 @@ import GlobeView from './views/GlobeView';
 import MapView from './views/MapView';
 import InspectionPanel from './components/InspectionPanel';
 import FilterList from './components/FilterList';
+import RoutePanel from './components/RoutePanel';
+import { fetchRoutes } from './services/routeApi';
 import useLayerManifest from './hooks/useLayerManifest';
 import { FILTERS, LAYER_BY_ID, DEFAULT_ACTIVE_LAYER } from './config/mapConfig';
 
 function App() {
   const [viewMode, setViewMode] = useState('globe');
-  // Cada SUBFILTRO liga/desliga sozinho
-    // Só UM subfiltro ligado por vez (ou nenhum: null)
+  // Só UM subfiltro ligado por vez (ou nenhum: null)
   const [activeLayerId, setActiveLayerId] = useState(DEFAULT_ACTIVE_LAYER);
   // Clicar no subfiltro ligado desliga; clicar em outro troca
   const selectLayer = (id) => setActiveLayerId((prev) => (prev === id ? null : id));
@@ -29,22 +29,61 @@ function App() {
   // Mesmo formato de antes ({ 'swim-ci': true }), para o mapa e o painel não mudarem
   const activeLayers = useMemo(() => (activeLayerId ? { [activeLayerId]: true } : {}), [activeLayerId]);
 
-  // Liga ou desliga todos os subfiltros de um grupo de uma vez
-  const setFilterLayers = (filter, on) =>
-    setActiveLayers((prev) => {
-      const next = { ...prev };
-      filter.layers.forEach((l) => { next[l.id] = on; });
-      return next;
-    });
-
   // Um filtro conta como "ligado" se pelo menos um subfiltro dele estiver ligado
   const activeFilters = useMemo(
     () => Object.fromEntries(FILTERS.map((f) => [f.id, f.layers.some((l) => activeLayers[l.id])])),
     [activeLayers]
   );
   const activeLayerName = activeLayerId ? LAYER_BY_ID[activeLayerId]?.name : null;
+
   // Ponto escolhido no mapa
   const [selection, setSelection] = useState(null);
+
+  // ---------- Rotas ----------
+  const [routeOrigin, setRouteOrigin] = useState(null);   // { lat, lon, label }
+  const [routeDest, setRouteDest] = useState(null);
+  const [routePick, setRoutePick] = useState(null);       // 'origem' | 'destino' | null
+  const [routeState, setRouteState] = useState({ status: 'idle', data: null, error: null });
+  const [hiddenModes, setHiddenModes] = useState({});     // { multicriterio: true } = escondido no mapa
+
+  // Mudar origem ou destino invalida a rota calculada
+  const resetRoute = () => {
+    setRouteState({ status: 'idle', data: null, error: null });
+    setHiddenModes({});
+  };
+
+  const handlePickRoute = (which) => setRoutePick((prev) => (prev === which ? null : which));
+
+  const handleSwapRoute = () => {
+    setRouteOrigin(routeDest);
+    setRouteDest(routeOrigin);
+    resetRoute();
+  };
+
+  const handleClearRoute = () => {
+    setRouteOrigin(null);
+    setRouteDest(null);
+    setRoutePick(null);
+    resetRoute();
+  };
+
+  const handleCalculateRoute = async () => {
+    if (!routeOrigin || !routeDest) return;
+    setRoutePick(null);
+    setRouteState({ status: 'loading', data: null, error: null });
+    try {
+      const data = await fetchRoutes(routeOrigin, routeDest);
+      setRouteState({ status: 'ok', data, error: null });
+    } catch (err) {
+      setRouteState({ status: 'error', data: null, error: err.message });
+    }
+  };
+
+  const toggleRouteMode = (id) => setHiddenModes((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  // O rodapé cresce quando mostra resultados; os painéis laterais sobem junto
+  const panelBottom =
+    routeState.status === 'ok' ? 'bottom-44' : routePick || routeState.status === 'error' ? 'bottom-28' : 'bottom-24';
 
   // Camadas exportadas pela equipe de dados
   const manifest = useLayerManifest();
@@ -68,12 +107,31 @@ function App() {
       setIsRightVisible(false);
       setIsLeftExpanded(false);
     }
-  };const handleSelectPoint = (point) => {
-      setSelection(point);
-      setIsRightVisible(true);
-      // Em telas estreitas, abrir a inspeção fecha os filtros
-      if (window.innerWidth < 1024) setIsLeftVisible(false);
-    };
+  };
+
+  const handleSelectPoint = (point) => {
+    // Escolhendo origem/destino da rota: o clique define o ponto em vez de inspecionar
+    if (routePick) {
+      const endpoint = {
+        lat: point.lat,
+        lon: point.lon,
+        label: point.name || `${point.lat.toFixed(2)}°N ${point.lon.toFixed(2)}°E`,
+      };
+      if (routePick === 'origem') {
+        setRouteOrigin(endpoint);
+        setRoutePick(routeDest ? null : 'destino'); // já pede o destino em seguida
+      } else {
+        setRouteDest(endpoint);
+        setRoutePick(null);
+      }
+      resetRoute();
+      return;
+    }
+    setSelection(point);
+    setIsRightVisible(true);
+    // Em telas estreitas, abrir a inspeção fecha os filtros
+    if (window.innerWidth < 1024) setIsLeftVisible(false);
+  };
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-black text-zinc-100 overflow-hidden select-none font-sans">
@@ -89,6 +147,11 @@ function App() {
             manifest={manifest}
             selectedId={selection?.id}
             onSelectPoint={handleSelectPoint}
+            routeOrigin={routeOrigin}
+            routeDest={routeDest}
+            routeData={routeState.status === 'ok' ? routeState.data : null}
+            hiddenModes={hiddenModes}
+            isPicking={Boolean(routePick)}
           />
         )}
       </div>
@@ -132,8 +195,7 @@ function App() {
       {/* 3. PAINÉIS LATERAIS FLUTUANTES */}
       
       {/* Menu Esquerdo: Filtros Científicos */}
-            {/* Menu Esquerdo: Filtros Científicos */}
-      <aside className={`absolute top-20 left-3 sm:left-6 bottom-24 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col justify-between z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
+      <aside className={`absolute top-20 left-3 sm:left-6 ${panelBottom} bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col justify-between z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
         viewMode === 'globe' || !isLeftVisible
           ? '-translate-x-[450px] opacity-0 pointer-events-none scale-95' 
           : `${isLeftExpanded ? 'w-[calc(100%-2.5rem)] sm:w-80' : 'w-[calc(100%-2.5rem)] sm:w-64'} translate-x-0 opacity-100 scale-100 pointer-events-auto`
@@ -194,7 +256,7 @@ function App() {
       )}
 
       {/* Painel Direito: Painel de Inspeção */}
-      <aside className={`absolute top-20 right-3 sm:right-6 bottom-24 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
+      <aside className={`absolute top-20 right-3 sm:right-6 ${panelBottom} bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
         viewMode === 'globe' || !isRightVisible
           ? 'translate-x-[450px] opacity-0 pointer-events-none scale-95' 
           : 'w-[calc(100%-2.5rem)] sm:w-72 translate-x-0 opacity-100 scale-100 pointer-events-auto'
@@ -233,26 +295,21 @@ function App() {
       )}
 
       {/* 4. PAINEL INFERIOR FLUTUANTE (Planejamento de Rotas A*) */}
-      <footer className={`absolute bottom-3 sm:bottom-4 left-3 sm:left-6 right-3 sm:right-6 h-14 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg px-3 sm:px-6 flex items-center justify-between shadow-2xl z-20 transition-all duration-500 ease-out transform-gpu ${
-        viewMode === 'globe' ? 'translate-y-28 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
+      <footer className={`absolute bottom-3 sm:bottom-4 left-3 sm:left-6 right-3 sm:right-6 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg px-3 sm:px-5 py-2.5 shadow-2xl z-20 transition-all duration-500 ease-out transform-gpu ${
+        viewMode === 'globe' ? 'translate-y-48 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
       }`}>
-        <div className="flex items-center space-x-3 sm:space-x-6">
-          <div className="flex items-center space-x-2 text-amber-400">
-            <Navigation className="w-4 h-4" />
-            <span className="text-[11px] sm:text-xs font-bold tracking-[0.15em] uppercase">Trajeto A*</span>
-          </div>
-          <div className="hidden xs:flex items-center space-x-2 sm:space-x-4 text-[11px] sm:text-xs font-mono">
-            <span className="text-zinc-400">Origem: <strong className="text-zinc-200 bg-zinc-900 px-1.5 sm:px-2 py-0.5 rounded border border-zinc-800">Não definido</strong></span>
-            <span className="text-zinc-600">➔</span>
-            <span className="text-zinc-400">Destino: <strong className="text-zinc-200 bg-zinc-900 px-1.5 sm:px-2 py-0.5 rounded border border-zinc-800">Não definido</strong></span>
-          </div>
-        </div>
-        <button 
-          disabled
-          className="px-3 sm:px-4 py-1.5 bg-zinc-900 text-zinc-600 text-[11px] sm:text-xs font-semibold rounded border border-zinc-800 cursor-not-allowed uppercase tracking-wider font-mono shrink-0"
-        >
-          Calcular Rota
-        </button>
+        <RoutePanel
+          origin={routeOrigin}
+          dest={routeDest}
+          picking={routePick}
+          routeState={routeState}
+          hiddenModes={hiddenModes}
+          onPick={handlePickRoute}
+          onSwap={handleSwapRoute}
+          onClear={handleClearRoute}
+          onCalculate={handleCalculateRoute}
+          onToggleMode={toggleRouteMode}
+        />
       </footer>
 
     </div>

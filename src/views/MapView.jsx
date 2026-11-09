@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-  MapContainer, TileLayer, ImageOverlay, Marker, Rectangle, Pane, useMap, useMapEvents,
+    MapContainer, TileLayer, ImageOverlay, Marker, Polyline, Rectangle, Pane, useMap, useMapEvents,
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { STUDY_AREA, CANDIDATE_SITES, FILTER_BY_ID, FALLBACK_BASEMAP } from '../config/mapConfig';
+import { STUDY_AREA, CANDIDATE_SITES, FILTER_BY_ID, FALLBACK_BASEMAP, ROUTE_MODES } from '../config/mapConfig';
 import { MOCK_POINTS } from '../mock/points';
 
 // Longitude sempre exibida como leste 0–360°
@@ -45,6 +45,19 @@ const siteIcon = (name, selected) => {
   }
   return iconCache.get(key);
 };
+// Marcador de origem (A) e destino (B) da rota
+const endpointIcon = (letter, color) => {
+  const key = `e${letter}`;
+  if (!iconCache.has(key)) {
+    iconCache.set(key, L.divIcon({
+      className: '',
+      html: `<span class="ares-endpoint" style="--c:${color}">${letter}</span>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+    }));
+  }
+  return iconCache.get(key);
+};
 
 // ---------- Componentes auxiliares (precisam estar dentro do MapContainer) ----------
 function MapEvents({ onCursor, onMapClick }) {
@@ -69,7 +82,10 @@ function FitStudyArea() {
 }
 
 // ---------- Mapa ----------
-export default function MapView({ activeFilters, activeLayers, manifest, selectedId, onSelectPoint }) {
+export default function MapView({
+  activeFilters, activeLayers, manifest, selectedId, onSelectPoint,
+  routeOrigin, routeDest, routeData, hiddenModes = {}, isPicking = false,
+}) {
   const [cursor, setCursor] = useState(null);
   const [fallbackFailed, setFallbackFailed] = useState(false);
 
@@ -104,7 +120,7 @@ export default function MapView({ activeFilters, activeLayers, manifest, selecte
         maxZoom={13}
         scrollWheelZoom
         zoomControl={false}
-        className="ares-map w-full h-full z-0 cursor-crosshair"
+        className={`ares-map w-full h-full z-0 cursor-crosshair ${isPicking ? 'is-picking' : ''}`}
       >
         <FitStudyArea />
         <MapEvents onCursor={setCursor} onMapClick={handleMapClick} />
@@ -142,7 +158,29 @@ export default function MapView({ activeFilters, activeLayers, manifest, selecte
             pathOptions={{ color: '#f59e0b', weight: 1, dashArray: '6 6', fill: false, opacity: 0.7 }}
           />
         </Pane>
+        {/* Rotas calculadas */}
+        <Pane name="ares-routes" style={{ zIndex: 500 }}>
+          {routeData?.rotas
+            .filter((r) => r.encontrada && !hiddenModes[r.modo])
+            .map((r) => {
+              const mode = ROUTE_MODES.find((m) => m.id === r.modo);
+              return (
+                <React.Fragment key={r.modo}>
+                  {/* contorno escuro: deixa a linha legível sobre qualquer camada */}
+                  <Polyline positions={r.pontos} interactive={false} pathOptions={{ color: '#09090b', weight: 6, opacity: 0.55 }} />
+                  <Polyline
+                    positions={r.pontos}
+                    interactive={false}
+                    pathOptions={{ color: mode?.color || '#fff', weight: 3, dashArray: mode?.dash || null }}
+                  />
+                </React.Fragment>
+              );
+            })}
+        </Pane>
 
+        {/* Origem e destino */}
+        {routeOrigin && <Marker position={[routeOrigin.lat, routeOrigin.lon]} icon={endpointIcon('A', '#a3e635')} interactive={false} />}
+        {routeDest && <Marker position={[routeDest.lat, routeDest.lon]} icon={endpointIcon('B', '#f43f5e')} interactive={false} />}
         {/* 4. Locais candidatos: sempre visíveis */}
         {CANDIDATE_SITES.map((site) => (
           <Marker
