@@ -395,9 +395,15 @@ export default function GlobeView({ onSelectSector }) {
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
       }
+      controls.dispose(); // remove os "ouvintes" de mouse/toque da câmera
+      // Libera as TEXTURAS da memória de vídeo (material.dispose() não faz isso sozinho).
+      // Sem isso, cada ida e volta entre globo e mapa acumula as imagens na placa de vídeo,
+      // e no celular a memória acaba (com 8K, só Marte ocupa mais de 100 MB).
+      [material, sunCoreMat, starsMat, phobosMat, deimosMat].forEach((m) => m.map?.dispose());
       geometry.dispose();
       material.dispose();
       renderer.dispose();
+      renderer.forceContextLoss(); // encerra o contexto WebGL na hora, sem esperar o navegador
       atmosGeo.dispose();
       atmosMat.dispose();
       starsGeo.dispose();
@@ -503,7 +509,7 @@ export default function GlobeView({ onSelectSector }) {
 
       {/* Painel de Telemetria e Alvo com Botão de Fechar */}
       {isHudVisible ? (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto max-w-lg w-[calc(100%-2rem)] px-2">
+        <div className="above-badge absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto max-w-lg w-[calc(100%-2rem)] px-2">
           <div className="bg-zinc-950/90 backdrop-blur-xl border border-amber-500/40 p-3 sm:p-4 rounded-xl shadow-[0_0_30px_rgba(245,158,11,0.15)] flex items-center justify-between space-x-3 sm:space-x-6 relative animate-fade-in">
             
             {/* Botão de Fechar no Canto Superior */}
@@ -541,7 +547,7 @@ export default function GlobeView({ onSelectSector }) {
         /* Botão para reexibir a telemetria caso tenha sido fechada */
         <button
           onClick={() => setIsHudVisible(true)}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 px-4 py-2 bg-zinc-950/90 backdrop-blur-md border border-amber-500/40 text-amber-400 rounded-full text-xs font-mono uppercase tracking-widest shadow-xl hover:bg-zinc-900 transition-all duration-300 cursor-pointer flex items-center space-x-2 animate-fade-in"
+          className="above-badge absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 px-4 py-2 bg-zinc-950/90 backdrop-blur-md border border-amber-500/40 text-amber-400 rounded-full text-xs font-mono uppercase tracking-widest shadow-xl hover:bg-zinc-900 transition-all duration-300 cursor-pointer flex items-center space-x-2 animate-fade-in"
         >
           <Target className="w-3.5 h-3.5" />
           <span>Exibir Alvo</span>
@@ -622,7 +628,7 @@ export default function GlobeView({ onSelectSector }) {
         )}
       </div>
       {/* ASSINATURA DO GRUPO: Canto Inferior Direito */}
-      <div className="absolute bottom-8 right-8 z-20 pointer-events-none hidden sm:block">
+      <div className="above-badge absolute bottom-8 right-8 z-20 pointer-events-none hidden sm:block">
         <div className="bg-zinc-950/80 backdrop-blur-md border border-amber-500/30 px-3.5 py-2 rounded-lg shadow-lg flex items-center space-x-2">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
           <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-400">

@@ -195,7 +195,7 @@ function App() {
       {/* 3. PAINÉIS LATERAIS FLUTUANTES */}
       
       {/* Menu Esquerdo: Filtros Científicos */}
-      <aside className={`absolute top-20 left-3 sm:left-6 ${panelBottom} bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col justify-between z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
+      <aside className={`above-badge absolute top-20 left-3 sm:left-6 ${panelBottom} bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col justify-between z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
         viewMode === 'globe' || !isLeftVisible
           ? '-translate-x-[450px] opacity-0 pointer-events-none scale-95' 
           : `${isLeftExpanded ? 'w-[calc(100%-2.5rem)] sm:w-80' : 'w-[calc(100%-2.5rem)] sm:w-64'} translate-x-0 opacity-100 scale-100 pointer-events-auto`
@@ -256,7 +256,7 @@ function App() {
       )}
 
       {/* Painel Direito: Painel de Inspeção */}
-      <aside className={`absolute top-20 right-3 sm:right-6 ${panelBottom} bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
+      <aside className={`above-badge absolute top-20 right-3 sm:right-6 ${panelBottom} bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg p-3 sm:p-4 flex flex-col z-20 shadow-2xl transition-all duration-500 ease-out transform-gpu ${
         viewMode === 'globe' || !isRightVisible
           ? 'translate-x-[450px] opacity-0 pointer-events-none scale-95' 
           : 'w-[calc(100%-2.5rem)] sm:w-72 translate-x-0 opacity-100 scale-100 pointer-events-auto'
@@ -295,7 +295,7 @@ function App() {
       )}
 
       {/* 4. PAINEL INFERIOR FLUTUANTE (Planejamento de Rotas A*) */}
-      <footer className={`absolute bottom-3 sm:bottom-4 left-3 sm:left-6 right-3 sm:right-6 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg px-3 sm:px-5 py-2.5 shadow-2xl z-20 transition-all duration-500 ease-out transform-gpu ${
+      <footer className={`above-badge absolute bottom-3 sm:bottom-4 left-3 sm:left-6 right-3 sm:right-6 bg-zinc-950/85 backdrop-blur-md border border-zinc-800 rounded-lg px-3 sm:px-5 py-2.5 shadow-2xl z-20 transition-all duration-500 ease-out transform-gpu ${
         viewMode === 'globe' ? 'translate-y-48 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
       }`}>
         <RoutePanel
