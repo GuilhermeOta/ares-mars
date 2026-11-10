@@ -9,9 +9,9 @@ import { LifeBuoy, Mountain, Wind } from 'lucide-react';
 // Área de estudo: mesmo recorte dos mapas de elevação/rotas do Saulo.
 export const STUDY_AREA = {
   name: 'Arcadia Planitia — setor AP',
-  bounds: [
-    [39.4, 200.8],  // [sul, oeste]
-    [41.25, 203.8], // [norte, leste]
+    bounds: [
+    [39.3, 200.8],   // [sul, oeste]   (pontos AP + 0,5° de margem)
+    [41.25, 203.85], // [norte, leste]
   ],
 };
 
@@ -87,3 +87,17 @@ export const FALLBACK_BASEMAP = {
   attribution: 'Mapa base de Marte: OpenPlanetary (MOLA/MGS, NASA)',
   maxNativeZoom: 9,
 };
+
+// ============================================================
+// ROTAS (API do Saulo)
+// ============================================================
+// Endereço da API. Vem do arquivo .env.local (VITE_ROUTE_API_URL).
+// Se estiver vazio, o site usa rotas de TESTE (src/mock/routes.js).
+export const ROUTE_API_URL = (import.meta.env.VITE_ROUTE_API_URL || '').replace(/\/$/, '');
+
+// Os 3 modos do A*, com as mesmas cores dos gráficos do Saulo
+export const ROUTE_MODES = [
+  { id: 'menor_distancia', name: 'Menor distância', color: '#ef4444', dash: null },
+  { id: 'maior_seguranca', name: 'Maior segurança', color: '#22c55e', dash: null },
+  { id: 'multicriterio', name: 'Multicritério', color: '#3b82f6', dash: '8 6' },
+];

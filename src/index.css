@@ -67,3 +67,24 @@ aside ::-webkit-scrollbar-track { background: transparent; }
 aside ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
 aside ::-webkit-scrollbar-thumb:hover { background: #52525b; }
 aside * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+
+/* Origem (A) e destino (B) da rota */
+.ares-endpoint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--c);
+  border: 2px solid #09090b;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+  font: 700 11px/1 ui-monospace, Consolas, monospace;
+  color: #09090b;
+}
+
+/* Escolhendo ponto da rota: contorno âmbar no mapa */
+.leaflet-container.ares-map.is-picking {
+  outline: 2px solid rgba(245, 158, 11, 0.6);
+  outline-offset: -2px;
+}
