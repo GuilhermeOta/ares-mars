@@ -88,3 +88,15 @@ aside * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
   outline: 2px solid rgba(245, 158, 11, 0.6);
   outline-offset: -2px;
 }
+
+/* ============================================================
+   Espaço para o selo "Powered by Netlify"
+   O Netlify coloca um selo fixo no canto inferior direito.
+   Quando o site está no Netlify, o main.jsx adiciona a classe
+   .has-host-badge e os elementos com .above-badge sobem para
+   não ficarem atrás dele. No computador (localhost), nada muda.
+   ============================================================ */
+:root { --badge-space: 0px; }
+:root.has-host-badge { --badge-space: 4.5rem; } /* altura do selo + folga */
+
+.above-badge { margin-bottom: var(--badge-space); }
