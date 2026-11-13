@@ -1,12 +1,11 @@
-import React from 'react';
-import { Search, X, MapPin, Crosshair, FlaskConical } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Search, X, MapPin, Crosshair, FlaskConical, Loader2 } from 'lucide-react';
 import { FILTER_BY_ID } from '../config/mapConfig';
+import { sampleLayer, formatLayerValue } from '../services/layerValues';
 
 const fmt = (lat, lon) => `${lat.toFixed(3)}°N, ${lon.toFixed(3)}°E`;
 
-const contains = (bounds, lat, lon) =>
-  lat >= bounds[0][0] && lat <= bounds[1][0] && lon >= bounds[0][1] && lon <= bounds[1][1];
-
+// Linha "rótulo: valor". Valor ausente aparece como "pendente".
 function Field({ label, value }) {
   return (
     <div className="flex justify-between gap-3 py-1.5 border-b border-zinc-800/60 last:border-0">
@@ -18,7 +17,7 @@ function Field({ label, value }) {
 
 function SourceBlock({ source }) {
   return (
-    <div className="mt-3 text-[11px] font-mono">
+    <div className="mt-2 text-[11px] font-mono">
       <Field label="Instrumento" value={source?.instrument && `${source.instrument}${source.mission ? ` (${source.mission})` : ''}`} />
       <Field label="Data" value={source?.date} />
       <Field label="Resolução" value={source?.resolution_m && `${source.resolution_m} m/px`} />
@@ -27,8 +26,41 @@ function SourceBlock({ source }) {
   );
 }
 
-export default function InspectionPanel({ selection, activeFilters, layers, onClear }) {
-  // Nada selecionado: mesmo visual que vocês já tinham
+/**
+ * Busca, para o ponto selecionado, o valor de cada camada que tem dados numéricos.
+ * Devolve { status: 'idle' | 'loading' | 'ok' | 'error', rows: [{ layer, value }] }.
+ *
+ * O estado só muda quando a resposta chega. O "carregando" é deduzido:
+ * se o resultado guardado é de outro ponto, ainda estamos buscando o atual.
+ */
+function usePointValues(selection, layers) {
+  const withValues = useMemo(() => layers.filter((l) => l.values), [layers]);
+  const [result, setResult] = useState({ selection: null, status: 'idle', rows: [] });
+
+  useEffect(() => {
+    if (!selection || withValues.length === 0) return undefined;
+    let cancelled = false; // se o usuário clicar em outro ponto antes de terminar
+    Promise.all(withValues.map((layer) => sampleLayer(layer, selection.lat, selection.lon).then((value) => ({ layer, value }))))
+      .then((rows) => {
+        if (!cancelled) setResult({ selection, status: 'ok', rows: rows.filter((r) => r.value != null) });
+      })
+      .catch(() => {
+        if (!cancelled) setResult({ selection, status: 'error', rows: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selection, withValues]);
+
+  if (!selection || withValues.length === 0) return { status: 'idle', rows: [] };
+  if (result.selection !== selection) return { status: 'loading', rows: [] };
+  return result;
+}
+
+export default function InspectionPanel({ selection, activeLayers, layers, onClear }) {
+  // O hook precisa vir antes de qualquer "return" (regra dos hooks do React)
+  const values = usePointValues(selection, layers);
+
   if (!selection) {
     return (
       <div className="flex-1 bg-zinc-900/40 border border-zinc-800/60 rounded p-4 flex flex-col items-center justify-center text-center">
@@ -45,12 +77,7 @@ export default function InspectionPanel({ selection, activeFilters, layers, onCl
 
   const filter = selection.filter ? FILTER_BY_ID[selection.filter] : null;
   const accent = filter?.color || '#f59e0b';
-
-  // Camadas exportadas que cobrem a coordenada clicada (só dos filtros ligados)
-  const layersHere =
-    selection.kind === 'coord'
-      ? layers.filter((l) => activeFilters[l.filter] && contains(l.bounds, selection.lat, selection.lon))
-      : [];
+  const activeLayer = layers.find((l) => activeLayers[l.id]);
 
   let Icon = Crosshair;
   let title = 'Coordenada selecionada';
@@ -89,32 +116,48 @@ export default function InspectionPanel({ selection, activeFilters, layers, onCl
       )}
 
       {selection.kind === 'point' && (
-        <>
-          {filter && (
-            <span className="inline-block mt-3 text-[10px] font-mono px-2 py-0.5 rounded border"
-                  style={{ color: filter.color, borderColor: `${filter.color}55` }}>
-              {filter.name}
-            </span>
-          )}
-          <p className="mt-2 text-xs text-zinc-300 leading-relaxed">{selection.desc}</p>
-          <SourceBlock source={selection.source} />
-        </>
+        <p className="mt-3 text-xs text-zinc-300 leading-relaxed">{selection.desc}</p>
       )}
 
-      {selection.kind === 'coord' && (
-        <div className="mt-3">
-          {layersHere.length === 0 ? (
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Nenhuma camada exportada cobre este ponto nos filtros ligados.
-            </p>
-          ) : (
-            layersHere.map((l) => (
-              <div key={l.id} className="mt-2 p-2 rounded bg-zinc-900/60 border border-zinc-800">
-                <p className="text-xs" style={{ color: FILTER_BY_ID[l.filter]?.color }}>{l.label}</p>
-                <SourceBlock source={l.source} />
+      {/* ---------- Valores reais das camadas neste ponto ---------- */}
+      <div className="mt-4">
+        <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1">Neste ponto</p>
+        {values.status === 'loading' && (
+          <p className="text-[11px] text-zinc-400 flex items-center gap-2">
+            <Loader2 className="w-3 h-3 animate-spin" /> Lendo os dados…
+          </p>
+        )}
+        {values.status === 'error' && (
+          <p className="text-[11px] text-red-400">Não foi possível ler os valores das camadas.</p>
+        )}
+        {values.status === 'ok' && values.rows.length === 0 && (
+          <p className="text-[11px] text-zinc-400">Fora da área coberta pelas camadas.</p>
+        )}
+        {values.status === 'ok' && values.rows.length > 0 && (
+          <div className="text-[11px] font-mono">
+            {values.rows.map(({ layer, value }) => (
+              <div
+                key={layer.id}
+                className={`flex justify-between gap-3 py-1.5 border-b border-zinc-800/60 last:border-0 ${
+                  activeLayers[layer.id] ? 'text-amber-300' : ''
+                }`}
+              >
+                <span className={activeLayers[layer.id] ? '' : 'text-zinc-500'}>{layer.label}</span>
+                <span className="text-right text-zinc-100">{formatLayerValue(layer, value)}</span>
               </div>
-            ))
-          )}
+            ))}
+          </div>
+        )}
+        {values.status === 'idle' && (
+          <p className="text-[11px] text-zinc-500">Nenhuma camada com dados numéricos ainda.</p>
+        )}
+      </div>
+
+      {/* ---------- Fonte da camada ligada ---------- */}
+      {activeLayer && (
+        <div className="mt-4">
+          <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">Fonte: {activeLayer.label}</p>
+          <SourceBlock source={activeLayer.source} />
         </div>
       )}
     </div>

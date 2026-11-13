@@ -1,0 +1,235 @@
+{
+  "layers": [
+    {
+      "id": "hillshade",
+      "filter": "base",
+      "label": "Relevo sombreado (MOLA)",
+      "image": "hillshade.png",
+      "bounds": [
+        [
+          39.29838695649359,
+          200.79924993184798
+        ],
+        [
+          41.25200299906333,
+          203.850750068152
+        ]
+      ],
+      "opacity": 1,
+      "source": {
+        "instrument": "MOLA",
+        "mission": "Mars Global Surveyor",
+        "product": "Mars_MGS_MOLA_DEM_mosaic_global_463m (USGS)",
+        "date": "Medições de 1997 a 2001",
+        "resolution_m": 463,
+        "confidence": "Medido; exagero vertical 12x para destacar o relevo"
+      }
+    },
+    {
+      "id": "elevacao",
+      "filter": "geologia",
+      "label": "Relevo e altitude",
+      "image": "elevacao.png",
+      "bounds": [
+        [
+          39.29838695649359,
+          200.79924993184798
+        ],
+        [
+          41.25200299906333,
+          203.850750068152
+        ]
+      ],
+      "opacity": 0.75,
+      "legend": {
+        "min": -3990.0,
+        "max": -3890.0,
+        "unit": "m",
+        "colors": [
+          "#333399",
+          "#00a0e8",
+          "#55dd77",
+          "#fefd98",
+          "#aa926b",
+          "#ab938e",
+          "#ffffff"
+        ],
+        "clipMin": true,
+        "clipMax": true
+      },
+      "values": {
+        "file": "elevacao.bin",
+        "dtype": "int16",
+        "scale": 1.0,
+        "width": 690,
+        "height": 579,
+        "unit": "m",
+        "decimals": 0
+      },
+      "source": {
+        "instrument": "MOLA",
+        "mission": "Mars Global Surveyor",
+        "product": "Mars_MGS_MOLA_DEM_mosaic_global_463m (USGS)",
+        "date": "Medições de 1997 a 2001",
+        "resolution_m": 463,
+        "confidence": "Medido (altímetro a laser), com interpolação entre as faixas de órbita"
+      }
+    },
+    {
+      "id": "declividade",
+      "filter": "geologia",
+      "label": "Inclinação do terreno",
+      "image": "declividade.png",
+      "bounds": [
+        [
+          39.29838695649359,
+          200.79924993184798
+        ],
+        [
+          41.25200299906333,
+          203.850750068152
+        ]
+      ],
+      "opacity": 0.75,
+      "legend": {
+        "min": 0.0,
+        "max": 2.0,
+        "unit": "°",
+        "colors": [
+          "#000003",
+          "#2b115e",
+          "#711f81",
+          "#b63679",
+          "#f0605d",
+          "#feaf78",
+          "#fbfcbf"
+        ],
+        "clipMin": false,
+        "clipMax": true
+      },
+      "values": {
+        "file": "declividade.bin",
+        "dtype": "int16",
+        "scale": 0.01,
+        "width": 690,
+        "height": 579,
+        "unit": "°",
+        "decimals": 2
+      },
+      "source": {
+        "instrument": "MOLA",
+        "mission": "Mars Global Surveyor",
+        "product": "Mars_MGS_MOLA_DEM_mosaic_global_463m (USGS)",
+        "date": "Medições de 1997 a 2001",
+        "resolution_m": 200,
+        "confidence": "Calculado a partir da elevação do MOLA. Na escala de ~460 m, rochas e crateras pequenas não aparecem."
+      }
+    },
+    {
+      "id": "rugosidade",
+      "filter": "suporte-vida",
+      "label": "Rugosidade (TRI)",
+      "image": "rugosidade.png",
+      "bounds": [
+        [
+          39.29838695649359,
+          200.79924993184798
+        ],
+        [
+          41.25200299906333,
+          203.850750068152
+        ]
+      ],
+      "opacity": 0.75,
+      "legend": {
+        "min": 0.0,
+        "max": 5.0,
+        "unit": "m",
+        "colors": [
+          "#440154",
+          "#443982",
+          "#30678d",
+          "#20908c",
+          "#35b778",
+          "#90d643",
+          "#fde724"
+        ],
+        "clipMin": false,
+        "clipMax": true
+      },
+      "values": {
+        "file": "rugosidade.bin",
+        "dtype": "int16",
+        "scale": 0.01,
+        "width": 690,
+        "height": 579,
+        "unit": "m",
+        "decimals": 2
+      },
+      "source": {
+        "instrument": "MOLA",
+        "mission": "Mars Global Surveyor",
+        "product": "Mars_MGS_MOLA_DEM_mosaic_global_463m (USGS)",
+        "date": "Medições de 1997 a 2001",
+        "resolution_m": 200,
+        "confidence": "Calculado a partir da elevação do MOLA. Na escala de ~460 m, rochas e crateras pequenas não aparecem."
+      }
+    },
+    {
+      "id": "obstaculos",
+      "filter": "suporte-vida",
+      "label": "Obstáculos ao deslocamento",
+      "image": "obstaculos.png",
+      "bounds": [
+        [
+          39.29838695649359,
+          200.79924993184798
+        ],
+        [
+          41.25200299906333,
+          203.850750068152
+        ]
+      ],
+      "opacity": 1,
+      "legend": {
+        "categories": [
+          {
+            "color": "#fa8c26",
+            "label": "Rugosidade extrema"
+          },
+          {
+            "color": "#db2626",
+            "label": "Depressão fechada"
+          },
+          {
+            "color": "#8c0d0d",
+            "label": "Os dois"
+          }
+        ]
+      },
+      "values": {
+        "file": "obstaculos.bin",
+        "dtype": "uint8",
+        "scale": 1,
+        "width": 690,
+        "height": 579,
+        "bits": {
+          "1": "sem dados",
+          "2": "declividade",
+          "4": "rugosidade extrema",
+          "8": "depressão fechada",
+          "16": "textura (CTX)",
+          "32": "margem de segurança"
+        }
+      },
+      "source": {
+        "instrument": "MOLA",
+        "mission": "Mars Global Surveyor",
+        "product": "Mars_MGS_MOLA_DEM_mosaic_global_463m (USGS)",
+        "date": "Medições de 1997 a 2001",
+        "resolution_m": 200,
+        "confidence": "Critérios do algoritmo de rotas: declividade > 15°, rugosidade no 1% mais alto, depressões > 20 m"
+      }
+    }
+  ]
+}

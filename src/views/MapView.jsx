@@ -7,6 +7,7 @@ import 'leaflet/dist/leaflet.css';
 
 import { STUDY_AREA, CANDIDATE_SITES, FILTER_BY_ID, FALLBACK_BASEMAP, ROUTE_MODES } from '../config/mapConfig';
 import { MOCK_POINTS } from '../mock/points';
+import MapLegend from '../components/MapLegend';
 
 // Longitude sempre exibida como leste 0–360°
 const normalizeLon = (lon) => ((lon % 360) + 360) % 360;
@@ -210,7 +211,12 @@ export default function MapView({
         <span className="text-zinc-600">|</span>
         <span>LON <strong className="text-white tabular-nums">{normalizeLon(hudLon).toFixed(3)}°E</strong></span>
       </div>
-
+      {/* Legenda da camada ligada (logo abaixo do HUD de coordenadas) */}
+      {visibleRasters[0] && (
+        <div className="absolute top-[7.5rem] left-1/2 -translate-x-1/2 z-10">
+          <MapLegend layer={visibleRasters[0]} />
+        </div>
+      )}
       {/* Aviso enquanto o relevo da área não foi exportado */}
       {manifest.status !== 'loading' && !hasBase && (
         <div className="absolute top-[7.5rem] left-1/2 -translate-x-1/2 z-10 pointer-events-none max-w-[90%] text-center text-[10px] text-amber-300/90 bg-zinc-950/80 border border-amber-500/30 rounded px-3 py-1">
