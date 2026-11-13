@@ -75,7 +75,9 @@ def save_png(rgba: np.ndarray, path: Path):
 
 def colorize(arr, vmin, vmax, cmap_name):
     norm = np.clip((arr - vmin) / (vmax - vmin), 0, 1)
-    return colormaps[cmap_name](norm)
+    rgba = colormaps[cmap_name](np.nan_to_num(norm))
+    rgba[~np.isfinite(arr), 3] = 0  # sem dado = transparente
+    return rgba
 
 
 def legend_colors(cmap_name, n=7):
@@ -91,23 +93,77 @@ def hillshade_rgba(z, res, vert_exag):
 
 
 # ---------------------------------------------------------------- valores
+NODATA_INT16 = -32768  # marca "sem dado" no arquivo de valores
+
+
 def save_values(arr: np.ndarray, path: Path, scale: float, dtype: str):
-    """Grava os valores como inteiros (metade do tamanho de float32). valor = bruto * scale."""
-    raw = np.round(arr / scale) if dtype == "int16" else arr
+    """Grava os valores como inteiros (metade do tamanho de float32). valor = bruto * scale.
+    Pixels sem dado (NaN) viram NODATA_INT16, e o site mostra "sem dado" ali."""
+    if dtype == "int16":
+        raw = np.where(np.isfinite(arr), np.round(np.nan_to_num(arr) / scale), NODATA_INT16)
+    else:
+        raw = arr
     np.asarray(raw, dtype="<i2" if dtype == "int16" else "u1").tofile(path)
-    return {"file": path.name, "dtype": dtype, "scale": scale, "width": int(arr.shape[1]), "height": int(arr.shape[0])}
+    info = {"file": path.name, "dtype": dtype, "scale": scale, "width": int(arr.shape[1]), "height": int(arr.shape[0])}
+    if dtype == "int16":
+        info["nodata"] = NODATA_INT16
+    return info
 
 
-def continuous_layer(lid, label, filt, arr, vmin, vmax, cmap, unit, source, out, bounds, scale, decimals):
+def continuous_layer(lid, label, filt, arr, vmin, vmax, cmap, unit, source, out, bounds, scale, decimals, blocky=False):
     lat_b, lat_t = bounds[0][0], bounds[1][0]
-    save_png(colorize(to_mercator_rows(arr, lat_b, lat_t, False), vmin, vmax, cmap), out / f"{lid}.png")
+    # blocky=True: dado de baixa resolução, mantém os "quadrados" nítidos em vez de borrar
+    save_png(colorize(to_mercator_rows(arr, lat_b, lat_t, blocky), vmin, vmax, cmap), out / f"{lid}.png")
     return {
         "id": lid, "filter": filt, "label": label, "image": f"{lid}.png", "bounds": bounds, "opacity": 0.75,
         "legend": {"min": vmin, "max": vmax, "unit": unit, "colors": legend_colors(cmap),
-                   "clipMin": bool(arr.min() < vmin), "clipMax": bool(arr.max() > vmax)},
+                   "clipMin": bool(np.nanmin(arr) < vmin), "clipMax": bool(np.nanmax(arr) > vmax)},
         "values": {**save_values(arr, out / f"{lid}.bin", scale, "int16"), "unit": unit, "decimals": decimals},
         "source": source,
     }
+
+
+# ---------------------------------------------------------------- SWIM
+SWIM_SOURCE = {
+    "instrument": "SWIM (combina SHARAD, MOLA, TES, THEMIS e outros)",
+    "mission": "Subsurface Water Ice Mapping (NASA)",
+    "date": None,
+}
+SWIM_CONSISTENCY = ("Índice de consistência com gelo do SWIM: perto de +1 = dado compatível com gelo, "
+                    "perto de -1 = incompatível. Escala a confirmar na documentação do SWIM.")
+
+# id do subfiltro -> (arquivo, nome, resolução original em m)
+SWIM_MAPS = {
+    "swim-ci": ("Ci.tif", "Consistência do gelo", 3000),
+    "swim-dielectric": ("Dielectric.tif", "Propriedades dielétricas", 3000),
+    "swim-radar-power": ("Rad_Power.tif", "Potência do radar na superfície", 3000),
+}
+
+
+def swim_layers(swim_dir: Path, spec, out: Path, bounds):
+    """Lê cada GeoTIFF com a MESMA função que lê o MOLA (recorta a área e põe na grade de 200 m).
+    'nearest' mantém os valores originais do SWIM, sem inventar valores intermediários."""
+    read = lambda name: dp.read_raster_to_grid(str(swim_dir / name), spec, "nearest").z
+    layers = []
+
+    # Índices de consistência: escala fixa de -1 a +1 (vermelho = incompatível, azul = compatível)
+    for lid, (fname, label, res) in SWIM_MAPS.items():
+        if not (swim_dir / fname).exists():
+            continue
+        layers.append(continuous_layer(lid, label, "suporte-vida", read(fname), -1.0, 1.0, "RdBu", "", 
+                                       {**SWIM_SOURCE, "resolution_m": res, "confidence": SWIM_CONSISTENCY},
+                                       out, bounds, 0.001, 2, blocky=True))
+
+    # Refletores de radar profundos: outra grandeza (unidade a confirmar) e só parte da área tem dado
+    if (swim_dir / "Reflectors.tif").exists():
+        r = read("Reflectors.tif")
+        vmax = float(np.ceil(np.nanpercentile(r, 98)))
+        layers.append(continuous_layer("swim-reflectors", "Refletores de radar profundos", "suporte-vida", r, 0.0, vmax,
+                                       "viridis", "", {**SWIM_SOURCE, "resolution_m": 4700,
+                                       "confidence": "Valores do produto de refletores do SWIM (unidade a confirmar). "
+                                                     "Áreas transparentes: sem refletor detectado/sem dado."},
+                                       out, bounds, 0.01, 2, blocky=True))
+    return layers
 
 
 def main():
@@ -116,6 +172,7 @@ def main():
     ap.add_argument("--res", type=float, default=200.0, help="resolução usada no main.py (m)")
     ap.add_argument("--out", default=str(DEFAULT_OUT), help="pasta de saída (public/data/layers)")
     ap.add_argument("--vert-exag", type=float, default=12.0, help="exagero vertical do relevo sombreado")
+    ap.add_argument("--swim", default=str(HERE / "dados" / "swim"), help="pasta com os GeoTIFFs do SWIM")
     a = ap.parse_args()
 
     npy, out = Path(a.npy), Path(a.out)
@@ -165,6 +222,13 @@ def main():
         "values": {**save_values(flags, out / "obstaculos.bin", 1, "uint8"), "bits": OBSTACLE_BITS},
         "source": {**derived, "confidence": "Critérios do algoritmo de rotas: declividade > 15°, rugosidade no 1% mais alto, depressões > 20 m"},
     })
+
+    # ---------- Água: mapas do SWIM (GeoTIFF com coordenadas, ~3 km por pixel) ----------
+    swim_dir = Path(a.swim)
+    if swim_dir.is_dir():
+        layers += swim_layers(swim_dir, spec, out, bounds)
+    else:
+        print(f"(pasta do SWIM não encontrada em {swim_dir}: camadas de água puladas)")
 
     (out / "manifest.json").write_text(json.dumps({"layers": layers}, ensure_ascii=False, indent=2), encoding="utf-8")
     for l in layers:

@@ -44,7 +44,9 @@ export async function sampleLayer(layer, lat, lon) {
   const data = await loadValues(layer);
   const row = Math.min(v.height - 1, Math.floor(((north - lat) / (north - south)) * v.height));
   const col = Math.min(v.width - 1, Math.floor(((lon - west) / (east - west)) * v.width));
-  return data[row * v.width + col] * v.scale;
+  const raw = data[row * v.width + col];
+  if (v.nodata != null && raw === v.nodata) return null; // pixel sem dado (ex.: refletores fora das passagens do radar)
+  return raw * v.scale;
 }
 
 /** Texto pronto para a tela: "-3.897 m", "0,42°", ou as causas do obstáculo. */

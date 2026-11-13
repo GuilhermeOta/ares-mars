@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-    MapContainer, TileLayer, ImageOverlay, Marker, Polyline, Rectangle, Pane, useMap, useMapEvents,
+  MapContainer, ImageOverlay, Marker, Polyline, Rectangle, Pane, useMap, useMapEvents,
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { STUDY_AREA, CANDIDATE_SITES, FILTER_BY_ID, LAYER_BY_ID, FALLBACK_BASEMAP, ROUTE_MODES } from '../config/mapConfig';
+import { STUDY_AREA, CANDIDATE_SITES, FILTER_BY_ID, LAYER_BY_ID, CONTEXT_BACKGROUND, ROUTE_MODES } from '../config/mapConfig';
 import { MOCK_POINTS } from '../mock/points';
 import MapLegend from '../components/MapLegend';
 import { RegionalCard, PendingCard } from '../components/MapNotice';
@@ -47,6 +47,7 @@ const siteIcon = (name, selected) => {
   }
   return iconCache.get(key);
 };
+
 // Marcador de origem (A) e destino (B) da rota
 const endpointIcon = (letter, color) => {
   const key = `e${letter}`;
@@ -89,7 +90,6 @@ export default function MapView({
   routeOrigin, routeDest, routeData, hiddenModes = {}, isPicking = false,
 }) {
   const [cursor, setCursor] = useState(null);
-  const [fallbackFailed, setFallbackFailed] = useState(false);
 
   const activeIds = Object.keys(activeFilters).filter((id) => activeFilters[id]);
   const visiblePoints = MOCK_POINTS.filter((p) => activeFilters[p.filter]);
@@ -98,6 +98,8 @@ export default function MapView({
   // O subfiltro ligado e o que existe de dado para ele
   const activeId = Object.keys(activeLayers).find((id) => activeLayers[id]);
   const activeEntry = manifest.layers.find((l) => l.id === activeId);
+  // Tonalidade do fundo: a pasta do subfiltro ligado (ou neutro, sem filtro)
+  const tint = (activeId && LAYER_BY_ID[activeId]?.filter) || 'neutro';
   const hasBase = Boolean(manifest.base);
 
   const handleMapClick = (latlng) => {
@@ -115,7 +117,8 @@ export default function MapView({
   const hudLon = cursor ? cursor.lng : (STUDY_AREA.bounds[0][1] + STUDY_AREA.bounds[1][1]) / 2;
 
   return (
-    <div className="w-full h-full relative bg-[#0c0806]">
+    // A classe tint-* fica nesta div (e não no MapContainer, que só lê o className ao ser criado)
+    <div className={`tint-${tint} w-full h-full relative bg-[#0c0806]`}>
       <MapContainer
         bounds={STUDY_AREA.bounds}
         boundsOptions={{ padding: [40, 40] }}
@@ -132,19 +135,23 @@ export default function MapView({
         <MapEvents onCursor={setCursor} onMapClick={handleMapClick} />
 
         {/* 1. Fundo: relevo real, se já exportado; senão, basemap de reserva */}
-        <Pane name="ares-base" style={{ zIndex: 200 }}>
-          {hasBase ? (
+        {/* 0. Contexto: Marte em volta da área (textura do globo), desfocado e tingido pela
+               pasta do filtro ligado. Preenche a tela inteira; é só paisagem, não é dado. */}
+        <Pane name="ares-context" className="ares-context" style={{ zIndex: 150 }}>
+          <ImageOverlay
+            url={CONTEXT_BACKGROUND.url}
+            bounds={CONTEXT_BACKGROUND.bounds}
+            attribution="Fundo ilustrativo: textura de Marte do globo"
+          />
+        </Pane>
+
+        {/* 1. Fundo da área de estudo: relevo real exportado pela equipe de dados (nítido) */}
+        <Pane name="ares-base" className="ares-base" style={{ zIndex: 200 }}>
+          {hasBase && (
             <ImageOverlay
               url={manifest.base.url}
               bounds={manifest.base.bounds}
               opacity={manifest.base.opacity ?? 1}
-            />
-          ) : (
-            <TileLayer
-              url={FALLBACK_BASEMAP.url}
-              attribution={FALLBACK_BASEMAP.attribution}
-              maxNativeZoom={FALLBACK_BASEMAP.maxNativeZoom}
-              eventHandlers={{ tileerror: () => setFallbackFailed(true) }}
             />
           )}
         </Pane>
@@ -164,6 +171,7 @@ export default function MapView({
             pathOptions={{ color: '#f59e0b', weight: 1, dashArray: '6 6', fill: false, opacity: 0.7 }}
           />
         </Pane>
+
         {/* Rotas calculadas */}
         <Pane name="ares-routes" style={{ zIndex: 500 }}>
           {routeData?.rotas
@@ -187,6 +195,7 @@ export default function MapView({
         {/* Origem e destino */}
         {routeOrigin && <Marker position={[routeOrigin.lat, routeOrigin.lon]} icon={endpointIcon('A', '#a3e635')} interactive={false} />}
         {routeDest && <Marker position={[routeDest.lat, routeDest.lon]} icon={endpointIcon('B', '#f43f5e')} interactive={false} />}
+
         {/* 4. Locais candidatos: sempre visíveis */}
         {CANDIDATE_SITES.map((site) => (
           <Marker
@@ -216,6 +225,7 @@ export default function MapView({
         <span className="text-zinc-600">|</span>
         <span>LON <strong className="text-white tabular-nums">{normalizeLon(hudLon).toFixed(3)}°E</strong></span>
       </div>
+
       {/* Abaixo do HUD: legenda da camada, valor regional ou aviso de "em preparação" */}
       {activeId && manifest.status !== 'loading' && (
         <div className="absolute top-[7.5rem] left-1/2 -translate-x-1/2 z-10">
@@ -224,12 +234,11 @@ export default function MapView({
           {!activeEntry && <PendingCard layer={LAYER_BY_ID[activeId]} />}
         </div>
       )}
+
       {/* Aviso enquanto o relevo da área não foi exportado */}
       {manifest.status !== 'loading' && !hasBase && (
         <div className="absolute top-[7.5rem] left-1/2 -translate-x-1/2 z-10 pointer-events-none max-w-[90%] text-center text-[10px] text-amber-300/90 bg-zinc-950/80 border border-amber-500/30 rounded px-3 py-1">
-          {fallbackFailed
-            ? 'Mapa base indisponível. A equipe de dados precisa exportar o relevo da área.'
-            : 'Mapa base global provisório. O relevo detalhado da área ainda não foi exportado.'}
+          Relevo detalhado da área ainda não exportado: rode o backend/export_layers.py.
         </div>
       )}
     </div>

@@ -100,3 +100,27 @@ aside * { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
 :root.has-host-badge { --badge-space: 4.5rem; } /* altura do selo + folga */
 
 .above-badge { margin-bottom: var(--badge-space); }
+
+/* ============================================================
+   Contexto ao redor da área de estudo
+   A textura de Marte do globo fica por baixo de tudo, desfocada e escurecida.
+   A tonalidade segue a pasta do filtro ligado (classe tint-* na div do mapa),
+   com transição suave. É só paisagem: a área de estudo fica nítida por cima.
+   ============================================================ */
+.leaflet-pane.ares-context {
+  filter: blur(5px) brightness(0.5) saturate(0.7);           /* neutro: sem filtro ligado */
+  transition: filter 0.8s ease;
+}
+.tint-geologia .leaflet-pane.ares-context {
+  filter: blur(5px) brightness(0.5) sepia(1) saturate(2.6) hue-rotate(-15deg);    /* laranja */
+}
+.tint-atmosfera .leaflet-pane.ares-context {
+  filter: blur(5px) brightness(0.62) sepia(1) saturate(2.8) hue-rotate(8deg);     /* amarelo */
+}
+.tint-suporte-vida .leaflet-pane.ares-context {
+  filter: blur(5px) brightness(0.5) sepia(1) saturate(2.2) hue-rotate(160deg);    /* azul */
+}
+/* Sombra suave em volta da área de estudo: separa o que é dado (nítido) do contexto */
+.leaflet-pane.ares-base img {
+  box-shadow: 0 0 48px 12px rgba(0, 0, 0, 0.55);
+}

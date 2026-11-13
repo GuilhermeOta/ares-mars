@@ -61,10 +61,10 @@ export const FILTERS = [
       { id: 'swim-dielectric', group: 'Disponibilidade de água', name: 'Propriedades dielétricas', source: 'SHARAD / SWIM' },
       { id: 'swim-thermal', group: 'Disponibilidade de água', name: 'Análise térmica', source: 'SWIM' },
       { id: 'swim-geomorph', group: 'Disponibilidade de água', name: 'Geomorfologia', source: 'SWIM' },
-      { id: 'rugosidade', group: 'Estabilidade do terreno', name: 'Rugosidade (TRI)', unit: 'm', source: 'MOLA' },
+      { id: 'rugosidade', group: 'Estabilidade do terreno', name: 'Rugosidade (TRI)', unit: 'm', source: 'MOLA (calculada)' },
       { id: 'rochas-irtm', group: 'Estabilidade do terreno', name: 'Abundância de rochas', unit: '%', source: 'Viking IRTM' },
-      { id: 'atividade-vulcanica', group: 'Atividade vulcânica', name: 'Evidências de vulcanismo', source: 'A definir' },
       { id: 'obstaculos', group: 'Estabilidade do terreno', name: 'Obstáculos ao deslocamento', source: 'MOLA (calculado)' },
+      { id: 'atividade-vulcanica', group: 'Atividade vulcânica', name: 'Evidências de vulcanismo', source: 'A definir' },
     ],
   },
 ];
@@ -84,6 +84,14 @@ export const LAYERS_MANIFEST_URL = `${import.meta.env.BASE_URL}data/layers/manif
 // Valores regionais (um número para a área toda), preenchidos à mão pela equipe de dados.
 // Fica FORA da pasta layers/ porque o manifest.json é refeito pelo export_layers.py.
 export const REGIONAL_VALUES_URL = `${import.meta.env.BASE_URL}data/regional.json`;
+
+// Fundo decorativo: recorte da textura de Marte do globo 3D em volta da área,
+// desfocado e tingido pelo filtro ativo. É só PAISAGEM: não é dado científico.
+// (gerado a partir de src/assets/8k_mars.jpg; borda esquerda da textura = -180°)
+export const CONTEXT_BACKGROUND = {
+  url: `${import.meta.env.BASE_URL}data/context-mars.jpg`,
+  bounds: [[10, 160], [70, 245]], // [[sul, oeste], [norte, leste]]
+};
 
 // Mapa base de reserva enquanto o relevo da área não é exportado
 export const FALLBACK_BASEMAP = {
