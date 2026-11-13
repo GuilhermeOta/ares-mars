@@ -89,6 +89,8 @@ function App() {
   const manifest = useLayerManifest();
   // Subfiltros que já têm imagem exportada (o resto mostra "sem dados")
   const exportedIds = useMemo(() => new Set(manifest.layers.map((l) => l.id)), [manifest]);
+  // Subfiltros que são um valor único para a área (marcados como "regional" na lista)
+  const regionalIds = useMemo(() => new Set(manifest.layers.filter((l) => l.regional).map((l) => l.id)), [manifest]);
   
   const [isLeftExpanded, setIsLeftExpanded] = useState(false);
   
@@ -230,6 +232,7 @@ function App() {
             <FilterList
               activeLayerId={activeLayerId}
               exportedIds={exportedIds}
+              regionalIds={regionalIds}
               onSelectLayer={selectLayer}
             />
           </div>

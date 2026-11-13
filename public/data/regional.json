@@ -1,0 +1,125 @@
+{
+  "_instrucoes": "Valores regionais do centro da área de estudo (40,3°N, 202,3°E). Troque cada null pelo número (sem aspas). O que ficar null continua aparecendo como 'em preparação' no site. 'seasons' é opcional: lista de valores por estação, no formato {\"label\": \"Verão N (Ls 90°)\", \"value\": 215}. Preencha também a 'source' com a fonte real de cada dado.",
+  "values": [
+    {
+      "id": "mcd-temperatura",
+      "value": 228.1,
+      "unit": "K",
+      "decimals": 1,
+      "seasons": [],
+      "note": "Cerca de -45 °C, no início da tarde.",
+      "source": {
+        "instrument": "Mars Climate Database v6.2",
+        "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
+        "date": "Ls 21,3° (início da primavera no norte), ~13h30 hora local, 10 m acima do solo, cenário de clima médio",
+        "resolution_m": null,
+        "confidence": "Modelo de circulação global, não é medição local. Valor do ponto da grade em 40°N, 202°E (borda da área)."
+      }
+    },
+    {
+      "id": "mcd-pressao",
+      "value": 843.9,
+      "unit": "Pa",
+      "decimals": 1,
+      "seasons": [],
+      "note": "Varia ao longo do ano com o congelamento de CO2 nos polos.",
+      "source": {
+        "instrument": "Mars Climate Database v6.2",
+        "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
+        "date": "Ls 21,3° (início da primavera no norte), ~13h30 hora local, 10 m acima do solo, cenário de clima médio",
+        "resolution_m": null,
+        "confidence": "Modelo de circulação global, não é medição local. Valor do ponto da grade em 40°N, 202°E (borda da área)."
+      }
+    },
+    {
+      "id": "mcd-densidade",
+      "value": 0.0194,
+      "unit": "kg/m³",
+      "decimals": 4,
+      "seasons": [],
+      "note": "Densidade do ar perto da superfície (na Terra, ao nível do mar: ~1,2 kg/m³).",
+      "source": {
+        "instrument": "Mars Climate Database v6.2",
+        "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
+        "date": "Ls 21,3° (início da primavera no norte), ~13h30 hora local, 10 m acima do solo, cenário de clima médio",
+        "resolution_m": null,
+        "confidence": "Modelo de circulação global, não é medição local. Valor do ponto da grade em 40°N, 202°E (borda da área)."
+      }
+    },
+    {
+      "id": "mcd-ventos",
+      "value": 4.9,
+      "unit": "m/s",
+      "decimals": 1,
+      "seasons": [],
+      "note": "Só a velocidade; a direção ainda não está disponível.",
+      "source": {
+        "instrument": "Mars Climate Database v6.2",
+        "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
+        "date": "Ls 21,3° (início da primavera no norte), ~13h30 hora local, 10 m acima do solo, cenário de clima médio",
+        "resolution_m": null,
+        "confidence": "Modelo de circulação global, não é medição local. Valor do ponto da grade em 40°N, 202°E (borda da área)."
+      }
+    },
+    {
+      "id": "indice-poeira",
+      "value": 0.35,
+      "unit": "",
+      "decimals": 2,
+      "seasons": [],
+      "note": "Opacidade da poeira na atmosfera (sem unidade); média mensal.",
+      "source": {
+        "instrument": "Mars Climate Database v6.2",
+        "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
+        "date": "Ls 21,3° (início da primavera no norte), ~13h30 hora local, 10 m acima do solo, cenário de clima médio",
+        "resolution_m": null,
+        "confidence": "Modelo de circulação global, não é medição local. Valor do ponto da grade em 40°N, 202°E (borda da área)."
+      }
+    },
+    {
+      "id": "raios-cosmicos",
+      "value": null,
+      "unit": "mSv/ano",
+      "decimals": 0,
+      "seasons": [],
+      "note": "Dose anual de raios cósmicos na superfície. Para converter de rem/ano: multiplique por 10.",
+      "source": {
+        "instrument": "(preencher: modelo ou artigo do mapa de raios cósmicos)",
+        "mission": null,
+        "date": null,
+        "resolution_m": null,
+        "confidence": "Modelo de radiação; a atmosfera mais espessa das planícies baixas reduz a dose"
+      }
+    },
+    {
+      "id": "swim-thermal",
+      "value": 0,
+      "unit": "",
+      "decimals": 0,
+      "seasons": [],
+      "note": "Mesmo valor em toda a área (o mapa do SWIM não varia aqui).",
+      "source": {
+        "instrument": "SWIM (combina SHARAD, MOLA, TES, THEMIS e outros)",
+        "mission": "Subsurface Water Ice Mapping (NASA)",
+        "date": null,
+        "resolution_m": 3000,
+        "confidence": "Índice do SWIM igual em toda a área de estudo. Interpretação da escala a confirmar na documentação do SWIM."
+      }
+    },
+    {
+      "id": "swim-geomorph",
+      "value": 0,
+      "unit": "",
+      "decimals": 0,
+      "seasons": [],
+      "note": "Mesmo valor em toda a área (o mapa do SWIM não varia aqui).",
+      "source": {
+        "instrument": "SWIM (combina SHARAD, MOLA, TES, THEMIS e outros)",
+        "mission": "Subsurface Water Ice Mapping (NASA)",
+        "date": null,
+        "resolution_m": 3000,
+        "confidence": "Índice do SWIM igual em toda a área de estudo. Interpretação da escala a confirmar na documentação do SWIM."
+      }
+    }
+  ]
+}
