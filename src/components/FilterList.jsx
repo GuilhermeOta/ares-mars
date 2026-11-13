@@ -14,7 +14,7 @@ function Radio({ on, color }) {
   );
 }
 
-export default function FilterList({ activeLayerId, exportedIds, onSelectLayer }) {
+export default function FilterList({ activeLayerId, exportedIds, regionalIds = new Set(), onSelectLayer }) {
   // Pastas abertas. Começa com a pasta do subfiltro ativo aberta.
   const [open, setOpen] = useState(() => {
     const owner = FILTERS.find((f) => f.layers.some((l) => l.id === activeLayerId));
@@ -83,6 +83,11 @@ export default function FilterList({ activeLayerId, exportedIds, onSelectLayer }
                         {layer.source}{layer.unit ? ` · ${layer.unit}` : ''}
                       </span>
                     </span>
+                    {regionalIds.has(layer.id) && (
+                      <span className="text-[9px] font-mono text-sky-400/80 border border-sky-500/30 rounded px-1 py-px mt-0.5 shrink-0">
+                        regional
+                      </span>
+                    )}
                     {!hasData && (
                       <span className="text-[9px] font-mono text-zinc-600 border border-zinc-800 rounded px-1 py-px mt-0.5 shrink-0">
                         sem dados

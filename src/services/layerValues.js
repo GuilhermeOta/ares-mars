@@ -1,4 +1,4 @@
-import { LAYERS_MANIFEST_URL } from '../config/mapConfig';
+import { LAYERS_MANIFEST_URL, STUDY_AREA } from '../config/mapConfig';
 
 // Pasta onde ficam as camadas (a mesma do manifest.json)
 const FOLDER = LAYERS_MANIFEST_URL.slice(0, LAYERS_MANIFEST_URL.lastIndexOf('/') + 1);
@@ -31,6 +31,12 @@ function loadValues(layer) {
  * e a coluna sai da longitude, por regra de três com os limites (bounds).
  */
 export async function sampleLayer(layer, lat, lon) {
+  // Valor regional: o mesmo número para qualquer ponto dentro da área de estudo
+  if (layer.regional) {
+    const [[s, w], [n, e]] = STUDY_AREA.bounds;
+    return lat >= s && lat <= n && lon >= w && lon <= e ? layer.regional.value : null;
+  }
+
   const v = layer.values;
   const [[south, west], [north, east]] = layer.bounds;
   if (lat < south || lat > north || lon < west || lon > east) return null;
@@ -44,7 +50,7 @@ export async function sampleLayer(layer, lat, lon) {
 /** Texto pronto para a tela: "-3.897 m", "0,42°", ou as causas do obstáculo. */
 export function formatLayerValue(layer, value) {
   if (value == null) return '—';
-  const v = layer.values;
+  const v = layer.values || layer.regional;
   if (v.bits) {
     if (value === 0) return 'Livre';
     return Object.entries(v.bits)

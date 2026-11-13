@@ -81,6 +81,9 @@ export const DEFAULT_ACTIVE_LAYER = 'elevacao';
 
 // Onde a equipe de dados publica as camadas (pasta public/data/layers)
 export const LAYERS_MANIFEST_URL = `${import.meta.env.BASE_URL}data/layers/manifest.json`;
+// Valores regionais (um número para a área toda), preenchidos à mão pela equipe de dados.
+// Fica FORA da pasta layers/ porque o manifest.json é refeito pelo export_layers.py.
+export const REGIONAL_VALUES_URL = `${import.meta.env.BASE_URL}data/regional.json`;
 
 // Mapa base de reserva enquanto o relevo da área não é exportado
 export const FALLBACK_BASEMAP = {

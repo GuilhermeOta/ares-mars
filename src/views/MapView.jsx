@@ -5,9 +5,10 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-import { STUDY_AREA, CANDIDATE_SITES, FILTER_BY_ID, FALLBACK_BASEMAP, ROUTE_MODES } from '../config/mapConfig';
+import { STUDY_AREA, CANDIDATE_SITES, FILTER_BY_ID, LAYER_BY_ID, FALLBACK_BASEMAP, ROUTE_MODES } from '../config/mapConfig';
 import { MOCK_POINTS } from '../mock/points';
 import MapLegend from '../components/MapLegend';
+import { RegionalCard, PendingCard } from '../components/MapNotice';
 
 // Longitude sempre exibida como leste 0–360°
 const normalizeLon = (lon) => ((lon % 360) + 360) % 360;
@@ -92,7 +93,11 @@ export default function MapView({
 
   const activeIds = Object.keys(activeFilters).filter((id) => activeFilters[id]);
   const visiblePoints = MOCK_POINTS.filter((p) => activeFilters[p.filter]);
-  const visibleRasters = manifest.layers.filter((l) => activeLayers[l.id]);
+  // Só camadas com imagem viram desenho no mapa (valores regionais não têm imagem)
+  const visibleRasters = manifest.layers.filter((l) => activeLayers[l.id] && l.url);
+  // O subfiltro ligado e o que existe de dado para ele
+  const activeId = Object.keys(activeLayers).find((id) => activeLayers[id]);
+  const activeEntry = manifest.layers.find((l) => l.id === activeId);
   const hasBase = Boolean(manifest.base);
 
   const handleMapClick = (latlng) => {
@@ -211,10 +216,12 @@ export default function MapView({
         <span className="text-zinc-600">|</span>
         <span>LON <strong className="text-white tabular-nums">{normalizeLon(hudLon).toFixed(3)}°E</strong></span>
       </div>
-      {/* Legenda da camada ligada (logo abaixo do HUD de coordenadas) */}
-      {visibleRasters[0] && (
+      {/* Abaixo do HUD: legenda da camada, valor regional ou aviso de "em preparação" */}
+      {activeId && manifest.status !== 'loading' && (
         <div className="absolute top-[7.5rem] left-1/2 -translate-x-1/2 z-10">
-          <MapLegend layer={visibleRasters[0]} />
+          {activeEntry?.url && <MapLegend layer={activeEntry} />}
+          {activeEntry?.regional && <RegionalCard layer={activeEntry} />}
+          {!activeEntry && <PendingCard layer={LAYER_BY_ID[activeId]} />}
         </div>
       )}
       {/* Aviso enquanto o relevo da área não foi exportado */}

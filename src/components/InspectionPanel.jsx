@@ -34,7 +34,7 @@ function SourceBlock({ source }) {
  * se o resultado guardado é de outro ponto, ainda estamos buscando o atual.
  */
 function usePointValues(selection, layers) {
-  const withValues = useMemo(() => layers.filter((l) => l.values), [layers]);
+  const withValues = useMemo(() => layers.filter((l) => l.values || l.regional), [layers]);
   const [result, setResult] = useState({ selection: null, status: 'idle', rows: [] });
 
   useEffect(() => {
@@ -142,7 +142,10 @@ export default function InspectionPanel({ selection, activeLayers, layers, onCle
                   activeLayers[layer.id] ? 'text-amber-300' : ''
                 }`}
               >
-                <span className={activeLayers[layer.id] ? '' : 'text-zinc-500'}>{layer.label}</span>
+                <span className={activeLayers[layer.id] ? '' : 'text-zinc-500'}>
+                  {layer.label}
+                  {layer.regional && <span className="text-sky-400/80"> (regional)</span>}
+                </span>
                 <span className="text-right text-zinc-100">{formatLayerValue(layer, value)}</span>
               </div>
             ))}
