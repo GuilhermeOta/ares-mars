@@ -64,6 +64,7 @@ export const FILTERS = [
       { id: 'rugosidade', group: 'Estabilidade do terreno', name: 'Rugosidade (TRI)', unit: 'm', source: 'MOLA' },
       { id: 'rochas-irtm', group: 'Estabilidade do terreno', name: 'Abundância de rochas', unit: '%', source: 'Viking IRTM' },
       { id: 'atividade-vulcanica', group: 'Atividade vulcânica', name: 'Evidências de vulcanismo', source: 'A definir' },
+      { id: 'obstaculos', group: 'Estabilidade do terreno', name: 'Obstáculos ao deslocamento', source: 'MOLA (calculado)' },
     ],
   },
 ];
@@ -76,7 +77,7 @@ export const LAYER_BY_ID = Object.fromEntries(
 );
 
 // Subfiltro ligado quando o mapa abre (null = nenhum)
-export const DEFAULT_ACTIVE_LAYER = 'swim-ci';
+export const DEFAULT_ACTIVE_LAYER = 'elevacao';
 
 // Onde a equipe de dados publica as camadas (pasta public/data/layers)
 export const LAYERS_MANIFEST_URL = `${import.meta.env.BASE_URL}data/layers/manifest.json`;
