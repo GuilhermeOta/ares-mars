@@ -1,0 +1,17 @@
+#!/bin/sh
+# ARES - trava local: bloqueia push direto na main.
+# Todo código entra por branch + Pull Request (ver GUIA_DO_PROJETO.md, "O ciclo de trabalho").
+# Ativar uma vez por computador:  git config core.hooksPath .githooks
+# Emergência (pular a trava):     git push --no-verify
+
+while read local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo ""
+    echo "  Push direto na main bloqueado pela trava do projeto."
+    echo "  Crie uma branch (git checkout -b nome-da-tarefa) e abra um Pull Request."
+    echo "  Detalhes no GUIA_DO_PROJETO.md, secao \"O ciclo de trabalho\"."
+    echo ""
+    exit 1
+  fi
+done
+exit 0

@@ -1,0 +1,4 @@
+# Scripts de shell precisam de quebra de linha LF, mesmo no Windows.
+# Sem isto, o Git do Windows pode converter para CRLF e a trava .githooks/pre-push para de funcionar.
+.githooks/* text eol=lf
+*.sh text eol=lf
