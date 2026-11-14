@@ -81,11 +81,11 @@ O desafio pede uma **visão integrada e em camadas** de um local ou rota em Mart
 | Pessoa | Papel no documento do projeto | O que fez de fato até aqui |
 |---|---|---|
 | **Saulo** | Coordenação geral e back-end | Sistema de rotas inteiro em Python (A*, terreno, obstáculos, modo interativo), organização dos filtros, coleta de dados (SWIM, Mars Climate Database) |
-| **Guilherme** | Front-end (promovido a Diretor de Informática) | Site em React, globo 3D, mapa 2D, painéis, integração com a API, publicação no Netlify e no Render, GitHub da equipe, aulas de programação |
+| **Guilherme** | Front-end e Programação Geral | Site em React, globo 3D, mapa 2D, painéis, integração com a API, publicação no Netlify e no Render, GitHub da equipe, aulas de programação |
 | **Willian** | Análise de dados e back-end | Previsto para os dados e metadados |
 | **Victor** | Design e identidade visual | Previsto |
-| **Anthonelo** | Matemática e física | Previsto para validar inclinação, pesos do A* e física da atmosfera |
-| **(@☆)** | Desenvolvimento da plataforma web | Previsto |
+| **Anthony** | Matemática e física | Previsto para validar inclinação, pesos do A* e física da atmosfera |
+| **Isabely** | Desenvolvimento da plataforma web | Previsto |
 
 ---
 
@@ -580,7 +580,7 @@ ares-mars/
 - [ ] Revisar a experiência no celular com o painel de inspeção mais longo.
 - [ ] **Aula 2** (CSS).
 
-### Matemática e física (Anthonelo)
+### Matemática e física (Anthony)
 - [ ] Validar os pesos dos modos do A* e o cálculo de declividade.
 - [ ] Avaliar a suavização das rotas (formato "em degraus" da grade).
 
