@@ -1,36 +1,6 @@
 {
   "mars_regions": [
     {
-      "id": "arcadia-planitia",
-      "name": "ARCADIA PLANITIA",
-      "type": "plain",
-      "color": "#f59e0b",
-      "center": {
-        "lat": 44.5,
-        "lon": 188.0
-      },
-      "geometry": {
-        "dLatScale": 5.5,
-        "dLonScale": 16.0,
-        "labelOffsetLat": 1.5
-      }
-    },
-    {
-      "id": "amazonis-planitia",
-      "name": "AMAZONIS PLANITIA",
-      "type": "plain",
-      "color": "#38bdf8",
-      "center": {
-        "lat": 34.5,
-        "lon": 189.0
-      },
-      "geometry": {
-        "dLatScale": 6.5,
-        "dLonScale": 17.0,
-        "labelOffsetLat": 0.0
-      }
-    },
-    {
       "id": "olympus-mons",
       "name": "OLYMPUS MONS",
       "type": "volcano",
