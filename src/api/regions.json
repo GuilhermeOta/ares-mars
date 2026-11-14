@@ -14,51 +14,12 @@
       }
     },
     {
-      "id": "ap-1",
-      "name": "AP-1",
-      "type": "landing_site",
-      "color": "#ffffff",
-      "center": {
-        "lat": 39.8,
-        "lon": 202.1
-      },
-      "geometry": {
-        "labelOffsetLat": -0.8
-      }
-    },
-    {
-      "id": "ap-8",
-      "name": "AP-8",
-      "type": "landing_site",
-      "color": "#ffffff",
-      "center": {
-        "lat": 40.75,
-        "lon": 201.3
-      },
-      "geometry": {
-        "labelOffsetLat": -0.8
-      }
-    },
-    {
-      "id": "ap-9",
-      "name": "AP-9",
-      "type": "landing_site",
-      "color": "#ffffff",
-      "center": {
-        "lat": 40.02,
-        "lon": 203.35
-      },
-      "geometry": {
-        "labelOffsetLat": -0.8
-      }
-    },
-    {
       "id": "gale",
       "name": "Cratera Gale (Curiosity)",
       "type": "landing_site",
       "color": "#22d3ee",
       "center": {
-        "lat": -4.5895,
+        "lat": -4.62,
         "lon": 137.4417
       },
       "geometry": {
@@ -76,6 +37,19 @@
       },
       "geometry": {
         "labelOffsetLat": -0.8
+      }
+    },
+    {
+      "id": "ap1 ap8 ap9",
+      "name": "AP-1 AP-8 AP-9",
+      "type": "landing_site",
+      "color": "#e9692c",
+      "center": {
+        "lat": 40.3,
+        "lon": 202.3
+      },
+      "geometry": {
+        "labelOffsetLat": -1.1
       }
     }
   ]
