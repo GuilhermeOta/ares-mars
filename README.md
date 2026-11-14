@@ -3,86 +3,84 @@
 > **NASA Space Apps Challenge Project**  
 > Developed with passion by team **A.T.O.M. (Associação de Tecnologia, Observação e Matemática)**
 
+🌐 **Site publicado:** [ares-mars-03112026.netlify.app](https://ares-mars-03112026.netlify.app)
+
 ---
 
 ## 📌 1. Apresentação da Missão
 
-O **ARES** (*Advanced Reconnaissance and Exploration System*) é uma plataforma web interativa desenvolvida para a exploração científica e o planejamento de futuras missões humanas em Marte, utilizando dados reais provenientes de diferentes missões e instrumentos científicos da NASA.
+O **ARES** (*Advanced Reconnaissance and Exploration System*) é uma plataforma web interativa para a exploração científica e o planejamento de futuras missões humanas em Marte, usando dados reais de diferentes missões e instrumentos da NASA e de outras instituições científicas.
 
-O projeto tem como região principal de estudo **Arcadia Planitia**, uma planície marciana de grande interesse para futuras missões humanas devido às evidências de gelo subterrâneo, às características de seu relevo e ao potencial científico de sua superfície.
+A região de estudo é o **setor AP**, na **fronteira entre Arcadia e Amazonis Planitia** (cerca de 40°N, 202°E). São planícies de grande interesse para futuras missões humanas, por causa das evidências de gelo subterrâneo, do relevo plano e do potencial científico da superfície.
 
-A proposta consiste em desenvolver um sistema cartográfico que reúna informações sobre recursos naturais, características geológicas e condições ambientais em uma única interface, permitindo que o usuário investigue diferentes regiões e planeje trajetos de exploração.
+O ARES reúne, numa única interface, informações sobre recursos naturais, geologia e condições ambientais, e permite planejar trajetos de exploração pela superfície.
 
-A plataforma funciona inteiramente pela web através de navegadores modernos, sem a necessidade de instalação de programas pelo usuário final.
+A plataforma funciona inteiramente pela web, no computador ou no celular, sem instalar nenhum programa.
 
 ---
 
 ## 🎯 2. Objetivo Central
 
-Desenvolver um mapa científico interativo de Marte que permita identificar possíveis locais de interesse para futuras missões humanas, considerando:
+Desenvolver um mapa científico interativo de Marte que ajude a identificar locais de interesse para futuras missões humanas, considerando:
 
-- 💧 **Disponibilidade e evidências de água subterrânea**
-- 🪨 **Presença e distribuição de minerais**
+- 💧 **Evidências de gelo e água subterrânea**
+- 🪨 **Minerais e geologia da superfície**
 - ☢️ **Condições de radiação**
-- 🌬️ **Velocidade e comportamento dos ventos**
-- 🌪️ **Ocorrência e intensidade de poeira atmosférica**
-- 🏔️ **Características topográficas e obstáculos para deslocamento**
+- 🌬️ **Ventos, temperatura e pressão**
+- 🌪️ **Poeira na atmosfera e na superfície**
+- 🏔️ **Relevo, inclinação e obstáculos para deslocamento**
 
-O sistema também permite a seleção de pontos de origem e destino, apresentando trajetos alternativos otimizados para a exploração da superfície.
+O sistema também permite escolher pontos de origem e destino e comparar trajetos alternativos.
 
 ---
 
 ## 🖥️ 3. Funcionamento da Plataforma
 
-A interface é dividida em duas etapas visuais principais:
+A interface tem duas etapas:
 
 ### 🌍 Etapa 1 — Visualização Global de Marte (3D)
-Ao acessar a plataforma, o usuário encontra uma representação tridimensional de Marte visto por inteiro (Three.js), permitindo:
-- Observar o planeta integralmente em 360°.
-- Identificar as principais regiões geográficas.
-- Visualizar a localização exata de Arcadia Planitia ($40^\circ\text{N}, 188^\circ\text{E}$).
-- Iniciar a transição orbital (zoom suave) ao selecionar o setor.
+Ao abrir o site, o usuário vê Marte inteiro em 3D (Three.js), com o Sol, as estrelas e as luas Fobos e Deimos. É possível:
+- Girar e aproximar o planeta, com sensibilidade de câmera ajustável e texturas em 2K ou 8K.
+- Identificar as principais regiões e os locais candidatos.
+- Clicar em **Descer** para a animação de aproximação até a área de estudo.
 
-### 🗺️ Etapa 2 — Exploração de Arcadia Planitia (2D)
-Após a aproximação, o usuário tem acesso a um mapa bidimensional detalhado da região com movimentação, ampliação e quatro filtros científicos independentes:
+### 🗺️ Etapa 2 — Exploração da Área de Estudo (2D)
+Depois da aproximação, o usuário navega num mapa detalhado da região, com o **relevo real medido pela sonda Mars Global Surveyor** ao fundo. Os filtros científicos ficam organizados em três pastas:
 
-* 🔵 **Filtro de Água:** Regiões com evidências de gelo subterrâneo e depósitos de água.
-  - *Informações:* Localização, profundidade estimada, tipo de evidência, instrumento/missão e grau de confiança.
-  - *Fontes:* SWIM, SHARAD e HiRISE.
-* 🟠 **Filtro Geológico:** Composição e características geológicas da superfície.
-  - *Informações:* Distribuição mineral, minerais hidratados, formações geológicas e relevo.
-  - *Fontes:* CRISM, HiRISE e CTX.
-* 🔴 **Filtro de Radiação:** Níveis de radiação e condições de exposição.
-  - *Informações:* Dados de radiação espacial, histórico de medições, fonte e limitações das estimativas.
-  - *Fontes:* Instrumento RAD (Rover Curiosity) e modelos teóricos.
-* 🟡 **Filtro de Ventos e Poeira:** Condições atmosféricas para exploração.
-  - *Informações:* Velocidade e direção dos ventos, tempestades de poeira e histórico atmosférico.
-  - *Fontes:* Mars Climate Sounder (MCS) e estações meteorológicas de superfície.
+* 🟠 **Geologia:** relevo e altitude, inclinação do terreno e composição mineral (silicatos/vidro, quartzo, K-feldspato e poeira superficial).
+  - *Fontes:* MOLA e TES.
+* 🟡 **Condições atmosféricas:** temperatura, infravermelho térmico, pressão, densidade, ventos, poeira e radiação.
+  - *Fontes:* Mars Climate Database e, para a radiação, o instrumento RAD do rover Curiosity (em preparação).
+* 🔵 **Suporte à vida:** compatibilidade com gelo subterrâneo, estabilidade do terreno (rugosidade, rochas e obstáculos) e unidades geológicas e vulcanismo.
+  - *Fontes:* SWIM (que combina SHARAD, MOLA, TES e THEMIS), MOLA e mapa geológico da USGS.
 
-> **Nota:** Cada camada apresenta a origem, data, resolução e confiabilidade das informações para garantir rigor científico.
+Ao clicar em qualquer ponto, o painel de inspeção mostra o valor de cada camada naquele lugar.
+
+> **Nota:** Cada camada informa a origem, a data, a resolução e a confiabilidade dos dados, e indica quando o valor é **medido**, **calculado**, **modelado** ou **estimado**. Dados medidos em outros lugares de Marte nunca são apresentados como medições da área de estudo.
 
 ---
 
 ## 🧭 4. Sistema de Planejamento de Rotas
 
-Uma das funcionalidades centrais do ARES é o planejamento de deslocamentos pela superfície marciana.
+Uma das funcionalidades centrais do ARES é o planejamento de deslocamentos pela superfície.
 
-O usuário pode selecionar um ponto de partida e um destino para que o sistema calcule e compare trajetos no próprio mapa. 
+O usuário escolhe um ponto de partida e um destino, e o sistema calcula e desenha no mapa **três trajetos para comparação**: **menor distância**, **maior segurança** e **multicritério**.
 
-- **Algoritmo Utilizado:** $A^*$ (*A-Star Algorithm*)
-- **Variáveis de Cálculo:** Distância percorrida, inclinação do terreno (declive topográfico) e identificação de obstáculos não navegáveis.
+- **Algoritmo utilizado:** $A^*$ (*A-Star*), sobre uma grade de 200 m construída com o relevo real do MOLA.
+- **Variáveis de cálculo:** distância percorrida, inclinação do terreno, rugosidade, distância até obstáculos e regiões não navegáveis (declives acentuados, terreno muito acidentado e depressões).
+- **Resultado:** distância, inclinação máxima e folga até o obstáculo mais próximo de cada trajeto, calculados em menos de 1 segundo.
 
 ---
 
 ## 📐 5. Organização da Interface
 
-A interface possui uma identidade visual inspirada em centros de controle de missões espaciais (*Deep Space Station*):
+A interface tem uma identidade visual inspirada em centros de controle de missões espaciais (*Deep Space Station*):
 
-- **Área Central:** Mapa bidimensional interativo de Marte.
-- **Painel Lateral Esquerdo:** Filtros científicos (Água, Geologia, Radiação e Atmosfera).
-- **Painel Lateral Direito:** Inspeção de dados do local/coordenada selecionada.
-- **Barra Superior:** Navegação, pesquisa de coordenadas e status da missão.
-- **Painel Inferior:** Módulo de planejamento de rotas e métricas do trajeto.
+- **Área central:** mapa interativo da área de estudo.
+- **Painel lateral esquerdo:** filtros científicos (Geologia, Condições atmosféricas e Suporte à vida).
+- **Painel lateral direito:** inspeção dos dados do ponto selecionado.
+- **Barra superior:** navegação entre o globo 3D e o mapa 2D, com coordenadas do cursor em tempo real.
+- **Painel inferior:** planejamento de rotas e métricas de cada trajeto.
 
 ---
 
@@ -90,39 +88,39 @@ A interface possui uma identidade visual inspirada em centros de controle de mis
 
 | Integrante | Função | Responsabilidades Principais |
 | :--- | :--- | :--- |
-| **Saulo** | Liderança & Back-end | Arquitetura do sistema, comunicação de módulos, integração de dados científicos e supervisão das entregas. |
-| **Isabelly** | Arquitetura Web | Estruturação da plataforma, navegação cartográfica, transição 3D/2D e hospedagem. |
-| **Guilherme Otaviano** | Front-end & UI | Desenvolvimento dos componentes visuais, menus laterais, marcadores interativos, filtros e interface do roteador. |
-| **Willian** | Análise de Dados | Aquisição e processamento de dados da NASA (PDS/GIS), rotinas em Python e organização de metadados. |
+| **Saulo** | Coordenação & Back-end | Liderança do grupo e das reuniões, sistema de rotas em Python ($A^*$, análise do terreno e obstáculos) e coleta dos dados reais de Marte (MOLA, SWIM, Mars Climate Database). |
+| **Guilherme Otaviano** | Programador Geral | Estrutura completa do site (globo 3D, mapa 2D, painéis, filtros e rotas), integração do back-end e dos dados científicos ao front-end, repositório no GitHub e publicação (Netlify e Render). |
+| **Isabelly** | Arquitetura Web | Conteúdo Científico: informações sobre os locais de Marte, com os textos explicativos das regiões, dos locais candidatos e dos filtros. |
+| **Willian** | Análise de Dados | Design & Apresentação: identidade visual e, junto com Anthony, a apresentação em slides. |
 | **Victor** | Design & UX | Identidade visual do ARES, paleta de cores espacial, tipografia, ícones e prototipagem de interface. |
-| **Anthonelo** | Matemática & Física | Validação dos cálculos de inclinação, fundamentação teórica dos ventos/radiação e validação do algoritmo $A^*$. |
+| **Anthony** | Matemática & Física | Matemática, Física & Apresentação: as validações de antes e, junto com Victor, a apresentação em slides. |
 
 ---
 
 ## 🛠️ 7. Tecnologias e Ferramentas
 
-### Processamento Científico & Back-end
-`Python` • `NumPy` • `Pandas` • `SciPy` • `Rasterio` • `GeoPandas` • `Astropy`
+### Front-end
+`React` • `Vite` • `Tailwind CSS` • `Three.js` • `Leaflet` • `React-Leaflet` • `Lucide React`
 
-### Desenvolvimento Web & Front-end
-`JavaScript` • `React.js` • `HTML5` • `CSS3` • `Tailwind CSS` • `Vite` • `Three.js` • `Lucide React`
+### Back-end & Processamento Científico
+`Python` • `FastAPI` • `NumPy` • `SciPy` • `scikit-image` • `Rasterio` • `Matplotlib`
 
-### Cartografia & GIS
-`Leaflet` • `React-Leaflet` • `GeoTIFF` • `GeoJSON` • `QGIS`
+### Hospedagem
+`Netlify` (site) • `Render` (API de rotas) • `GitHub` (código e trabalho em equipe)
 
-### Fontes de Dados Científicos (NASA)
-`NASA PDS` • `NASA Mars Trek` • `Mars SWIM` • `MOLA` • `THEMIS` • `HiRISE` • `CRISM` • `SHARAD` • `Mars Climate Sounder (MCS)`
+### Fontes de Dados Científicos
+`MOLA` (Mars Global Surveyor) • `SWIM` (SHARAD, MOLA, TES, THEMIS) • `TES` (Mars Global Surveyor) • `Mars Climate Database` (LMD/ESA/CNES) • `Mapa geológico de Marte` (USGS SIM 3292)
 
 ---
 
 ## 📋 8. Etapas de Desenvolvimento
 
-1. **Pesquisa e Planejamento:** Delimitação de Arcadia Planitia e levantamento de bases de dados.
-2. **Processamento de Dados:** Coleta e preparação dos rasters topográficos, hídricos e atmosféricos.
-3. **Construção da Plataforma:** Implementação do Globo 3D, mapa 2D e layout *Deep Space*.
-4. **Integração Científica:** Conexão das camadas de dados (água, geologia, radiação e ventos) com os filtros.
-5. **Planejamento de Rotas:** Implementação da grade de navegação e algoritmo $A^*$.
-6. **Finalização:** Testes de usabilidade, revisão científica, documentação e deploy.
+1. ✅ **Pesquisa e Planejamento:** delimitação da área de estudo e levantamento das bases de dados.
+2. ✅ **Processamento de Dados:** preparação do relevo, dos dados de gelo, minerais, geologia e atmosfera.
+3. ✅ **Construção da Plataforma:** globo 3D, mapa 2D e layout *Deep Space*.
+4. ✅ **Integração Científica:** 21 de 22 subfiltros com dados (falta apenas a radiação).
+5. ✅ **Planejamento de Rotas:** algoritmo $A^*$ com relevo real e três modos de rota.
+6. 🔄 **Finalização:** dado de radiação, testes de usabilidade, revisão científica e preparação da apresentação.
 
 ---
 
@@ -144,10 +142,12 @@ npm run dev
 
 Acesse `http://localhost:5173` no seu navegador para visualizar a plataforma.
 
+Para usar o cálculo de rotas no seu computador e para saber **como contribuir com o projeto**, veja o [Guia do Projeto](GUIA_DO_PROJETO.md).
+
 ---
 
 ## 🌌 10. Objetivo Coletivo
 
-O **ARES** representa a união interdisciplinar da **A.T.O.M. (Associação de Tecnologia, Observação e Matemática)**. Nosso objetivo vai além da criação de um mapa: desenvolvemos uma ferramenta científica capaz de integrar dados reais da NASA, facilitar sua interpretação e servir como suporte conceitual para a tomada de decisões em futuras missões humanas no Planeta Vermelho.
+O **ARES** representa a união interdisciplinar da **A.T.O.M. (Associação de Tecnologia, Observação e Matemática)**. Nosso objetivo vai além da criação de um mapa: desenvolvemos uma ferramenta científica capaz de integrar dados reais de Marte, facilitar sua interpretação e servir como suporte conceitual para a tomada de decisões em futuras missões humanas no Planeta Vermelho.
 
 *ARES — NASA Space Apps Challenge.*

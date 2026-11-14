@@ -1,8 +1,11 @@
 # ARES — Guia do Projeto
 
-Este guia explica **como trabalhar no ARES sem quebrar nada**: como preparar o computador, o passo a passo de cada tarefa (antes, durante e depois de programar), onde fica cada coisa e o que fazer quando algo dá errado.
+Este guia mostra **como trabalhar no ARES sem quebrar nada**, quase tudo **por cliques**, sem precisar decorar comandos.
 
-Serve para todo o grupo A.T.O.M., inclusive para quem está começando a programar agora.
+> ## ⭐ A única regra que não pode ser quebrada
+> **Nunca mexa direto na `main`.** A `main` é o site oficial.
+> Toda mudança é feita numa **branch** (uma cópia sua) e entra no site por um **Pull Request** (um pedido de aprovação).
+> O resto deste guia só explica como fazer isso.
 
 ---
 
@@ -10,573 +13,385 @@ Serve para todo o grupo A.T.O.M., inclusive para quem está começando a program
 
 | Eu quero… | Vá para |
 |---|---|
-| Entender as palavras do Git (branch, commit, PR…) | [Glossário](#1-glossário-as-palavras-que-aparecem-o-tempo-todo) |
-| Preparar meu computador pela primeira vez | [Primeira vez](#2-primeira-vez-preparar-o-computador) |
-| Ligar o site no meu computador | [Rodar o projeto](#3-rodar-o-projeto) |
-| **Começar uma tarefa nova** | [O ciclo de trabalho](#4-o-ciclo-de-trabalho) ⭐ |
-| Resolver um problema ou um erro | [Deu problema?](#5-deu-problema) |
-| Saber onde fica cada arquivo | [Mapa do projeto](#6-mapa-do-projeto) |
-| Saber em que parte eu trabalho | [Quem mexe em quê](#8-quem-mexe-em-quê) |
-| Fazer algo específico (filtro, dado, camada…) | [Receitas rápidas](#9-receitas-rápidas) |
-
-> **A regra mais importante do projeto:** ninguém trabalha direto na `main`. Toda tarefa tem a sua branch e entra no site por um Pull Request. O resto do guia explica como.
+| Entender as palavras (branch, commit, PR…) | [1. Palavras do dia a dia](#1-palavras-do-dia-a-dia) |
+| Mudar **um arquivo só** (um texto, um número, uma cor) | [Jeito 1: pelo site do GitHub](#jeito-1-pelo-site-do-github-mais-fácil) |
+| Mudar **vários arquivos**, sem instalar nada | [Jeito 2: VS Code no navegador](#jeito-2-vs-code-no-navegador-githubdev) |
+| **Programar** de verdade e ver o site rodando | [Jeito 3: VS Code no computador](#jeito-3-vs-code-no-computador) |
+| Resolver um problema | [4. Deu problema?](#4-deu-problema) |
+| Saber onde fica cada arquivo | [5. Mapa do projeto](#5-mapa-do-projeto) |
+| Fazer algo específico (filtro, dado, cor…) | [8. Receitas rápidas](#8-receitas-rápidas) |
 
 ---
 
-## 1. Glossário: as palavras que aparecem o tempo todo
+## 1. Palavras do dia a dia
 
-| Palavra | O que significa, em português simples |
+| Palavra | O que significa |
 |---|---|
-| **Repositório** | A pasta do projeto, com todo o histórico de mudanças. O nosso fica no GitHub: `GuilhermeOta/ares-mars`. |
-| **Commit** | Um "ponto de salvamento" com uma mensagem dizendo o que mudou. Dá para voltar a qualquer commit. |
-| **Branch** | Uma "linha paralela" do projeto, onde você trabalha sem afetar o resto. |
-| **`main`** | A branch principal. **É ela que vai para o site oficial.** Por isso ninguém mexe nela direto. |
-| **Push** | Enviar os seus commits do computador para o GitHub. |
-| **Pull** | Trazer do GitHub para o seu computador o que os outros enviaram. |
-| **Pull Request (PR)** | Um pedido para juntar a sua branch na `main`. Lá a mudança é testada e revisada antes de entrar. |
-| **Merge** | Juntar a branch na `main`, ou seja, aprovar o PR. |
-| **Deploy Preview** | Uma cópia de teste do site que o Netlify cria para cada PR, num endereço próprio. Serve para testar antes do merge. |
-| **Conflito** | Quando duas pessoas mudaram a mesma linha do mesmo arquivo. O Git pede para alguém decidir qual versão fica. |
-| **Trava (hook)** | Um script que roda antes do push e **bloqueia envios direto para a `main`**. Fica em `.githooks/pre-push`. |
+| **Repositório** | A pasta do projeto no GitHub, com todo o histórico: `GuilhermeOta/ares-mars`. |
+| **`main`** | A versão oficial. **É o que aparece no site publicado.** |
+| **Branch** | Uma cópia sua do projeto, onde você mexe sem afetar a `main`. |
+| **Commit** | Um "ponto de salvamento" com uma frase dizendo o que mudou. |
+| **Push / Publish** | Enviar os seus commits do computador para o GitHub. |
+| **Pull / Sync** | Trazer do GitHub o que os outros já enviaram. |
+| **Pull Request (PR)** | O pedido para juntar a sua branch na `main`. É ali que a mudança é testada e aprovada. |
+| **Merge** | Aprovar o PR: a mudança entra na `main` e vai para o site. |
+| **Deploy Preview** | Uma cópia de teste do site, criada pelo Netlify para cada PR, num endereço próprio. |
 
 ---
 
-## 2. Primeira vez: preparar o computador
+## 2. Escolha o seu jeito de trabalhar
 
-Faça uma vez só, em cada computador. Precisa ter instalado: **Git**, **Node.js** e **Python**.
+| | Jeito 1: site do GitHub | Jeito 2: github.dev | Jeito 3: VS Code no computador |
+|---|---|---|---|
+| **Instalar algo?** | Não | Não | Sim (uma vez) |
+| **Bom para** | Um arquivo: um texto, um valor, uma cor | Vários arquivos de uma vez | Programar e testar o site rodando |
+| **Vê o resultado** | No Deploy Preview (~2 min) | No Deploy Preview (~2 min) | Na hora, no navegador |
+| **Para quem** | Todos | Todos | Quem programa |
 
-```bash
-git clone https://github.com/GuilhermeOta/ares-mars.git
-cd ares-mars
-npm install
-git config core.hooksPath .githooks
-git config pull.rebase false
-```
+Os três jeitos terminam do mesmo modo: num **Pull Request** com **Deploy Preview** ([seção 3](#3-pull-request-o-mesmo-final-para-todo-mundo)).
 
-O que cada linha faz:
+### Jeito 1: pelo site do GitHub (mais fácil)
 
-1. `git clone` baixa o projeto do GitHub.
-2. `cd ares-mars` entra na pasta.
-3. `npm install` instala as bibliotecas do site (cria a pasta `node_modules/`).
-4. `git config core.hooksPath .githooks` **liga a trava** que impede push direto na `main`. Não pule esta linha.
-5. `git config pull.rebase false` diz ao Git como juntar as novidades no `git pull`. Sem isso, o `git pull origin main` pode parar com o erro "divergent branches".
+Para mudar **um arquivo só**.
 
-Se você for mexer nas rotas ou nos dados (pasta `backend/`), instale também as bibliotecas do Python:
+1. Abra o repositório no GitHub e clique no arquivo que quer mudar (ex.: `public/data/regional.json`).
+2. Clique no **lápis ✏️** ("Edit this file"), no canto direito, acima do conteúdo.
+3. Faça a mudança.
+4. Clique no botão verde **"Commit changes…"**.
+5. Na janela que abre:
+   - Escreva uma frase dizendo o que mudou (ex.: "Adiciona o valor da radiação").
+   - Marque **"Create a new branch for this commit and start a pull request"**. ⚠️ **Não escolha** "Commit directly to the main branch".
+   - Dê um nome à branch (veja [como dar nome](#como-dar-nome-à-branch)).
+6. Clique em **"Propose changes"**.
+7. Na tela seguinte, clique em **"Create pull request"**.
 
-```bash
-cd backend
-python -m pip install -r requirements.txt
-cd ..
-```
+Pronto: siga para a [seção 3](#3-pull-request-o-mesmo-final-para-todo-mundo).
 
-Para usar a API de rotas no seu computador, crie um arquivo chamado `.env.local` na raiz do projeto com esta linha:
+### Jeito 2: VS Code no navegador (github.dev)
 
-```
-VITE_ROUTE_API_URL=http://localhost:8000
-```
+Para mudar **vários arquivos** sem instalar nada.
 
-O `.env.local` é pessoal: cada um cria o seu, e ele **nunca** vai para o GitHub.
+1. Abra o repositório no GitHub e aperte a tecla **`.`** (ponto). Abre um VS Code dentro do navegador.
+2. **Antes de mexer em qualquer coisa,** clique no nome da branch (`main`) no **canto inferior esquerdo** → **"Create new branch…"** → digite o nome → Enter. O canto inferior esquerdo passa a mostrar o nome novo.
+3. Edite os arquivos normalmente. Os arquivos ficam na barra da esquerda, no primeiro ícone (Explorer).
+4. Clique no ícone **Source Control** na barra da esquerda (o terceiro ícone, um galho com três bolinhas).
+5. Escreva uma frase dizendo o que mudou e clique em **"Commit & Push"**.
+6. Volte para a página do repositório no GitHub. Vai aparecer uma faixa amarela com o botão **"Compare & pull request"**. Clique nele e depois em **"Create pull request"**.
 
-> 💡 **Dica:** ligue o salvamento automático do VS Code em *File → Auto Save*. Muitos "erros misteriosos" são só arquivos que não foram salvos.
+> Confira no canto inferior esquerdo, **antes do passo 5**, que a branch **não** é a `main`. O "Commit & Push" envia para a branch que estiver ali.
 
----
+Pronto: siga para a [seção 3](#3-pull-request-o-mesmo-final-para-todo-mundo).
 
-## 3. Rodar o projeto
+### Jeito 3: VS Code no computador
 
-### O site
+Para **programar** e ver o site rodando enquanto mexe.
 
-Na raiz do projeto:
+#### Primeira vez (só uma vez por computador)
 
-```bash
-npm run dev
-```
+Precisa ter instalado: **[Git](https://git-scm.com)**, **[Node.js](https://nodejs.org)** e **[VS Code](https://code.visualstudio.com)**. Se for mexer no `backend/`, também o **[Python](https://www.python.org)**.
 
-Abra o endereço que aparecer (normalmente `http://localhost:5173`). Para desligar, aperte `Ctrl + C` no terminal.
+1. Abra o VS Code. Na tela de boas-vindas, clique em **"Clone Git Repository…"**. Se a tela não aparecer, abra o ícone **Source Control** na barra da esquerda e clique em **"Clone Repository"**.
+2. Cole o endereço `https://github.com/GuilhermeOta/ares-mars.git` e aperte Enter.
+3. Escolha a pasta onde o projeto vai ficar. Se o VS Code pedir para entrar na conta do GitHub, aceite: o repositório é privado.
+4. Quando perguntar se quer abrir o projeto, clique em **"Open"**.
+5. Abra o terminal pelo menu **Terminal → New Terminal** e digite uma vez:
 
-### A API de rotas (opcional)
+   ```
+   npm install
+   ```
 
-O site funciona sem ela. Sem API, o painel de rotas usa **rotas de teste** e avisa na tela. Para usar o cálculo de verdade, abra **outro** terminal:
+   Isso baixa as bibliotecas do site. É o único comando obrigatório do guia.
 
-```bash
-cd backend
-python -m uvicorn api:app --reload
-```
+6. **Opcional, mas recomendado:** no mesmo terminal, ligue a **trava** que impede envio direto para a `main` e a configuração do `pull`:
 
-A API e o site precisam ficar ligados ao mesmo tempo, cada um no seu terminal. O Vite só lê o `.env.local` quando liga, então reinicie o `npm run dev` se tiver acabado de criar esse arquivo.
+   ```
+   git config core.hooksPath .githooks
+   git config pull.rebase false
+   ```
 
-A API usa sozinha o relevo real que já vem no projeto (`backend/dados/elevacao_m.npy`). Se aparecer o aviso **"Terreno SINTÉTICO"** no site, veja em [Deu problema?](#5-deu-problema).
+7. **Para mostrar os botões que ligam o site:** no **Explorer** (o primeiro ícone da barra da esquerda), procure a seção **"NPM SCRIPTS"** lá embaixo. Se ela não aparecer, clique nos **"…"** no topo do Explorer e marque **"NPM Scripts"**.
 
-> No Windows, use sempre `python -m uvicorn` e `python -m pip`, e não só `uvicorn` ou `pip`. A pasta de programas do Python costuma não estar no PATH.
+#### O dia a dia, em 5 passos
 
----
+**Onde ficam os botões:**
 
-## 4. O ciclo de trabalho
+- **Canto inferior esquerdo:** o **nome da branch** em que você está. Ao lado, as **setas circulares** (sincronizar).
+- **Barra da esquerda, terceiro ícone (galho com três bolinhas):** **Source Control**, ou o atalho `Ctrl + Shift + G`. É onde se faz o commit e o envio.
+- **Explorer → NPM SCRIPTS:** os botões ▶ para ligar o site (`dev`) e procurar erros (`lint`).
 
-Toda tarefa, grande ou pequena, segue estes 5 passos:
+**Passo 1 — Antes de mexer**
+1. Confira se o canto inferior esquerdo mostra `main`. Se não mostrar, clique nele e escolha `main`.
+2. Clique nas **setas circulares** ao lado, para trazer as novidades do GitHub.
+3. Clique no nome `main` → **"Create new branch…"** → digite o nome da branch → Enter.
 
-```
- 1. ANTES            2. PROGRAMAR        3. CONFERIR          4. ENVIAR              5. DEPOIS
- main atualizada  →  na sua branch    →  build, lint e     →  push + Pull       →  merge, apagar
- + branch nova       (salve sempre)      testes passando      Request + prévia      branch, pull
-```
+**Passo 2 — Programar**
+1. Em **NPM SCRIPTS**, clique no **▶ ao lado de `dev`**. Abra o endereço que aparecer no terminal (normalmente `http://localhost:5173`).
+2. Mexa nos arquivos e salve (`Ctrl + S`). O navegador atualiza sozinho.
 
-### Passo 1 — Antes de escrever qualquer código
+> 💡 Ligue o salvamento automático em **File → Auto Save**. Muitos "erros misteriosos" são só arquivos não salvos.
 
-```bash
-git checkout main
-git pull
-git checkout -b nome-da-tarefa
-```
+**Passo 3 — Salvar no Git (commit)**
+1. Abra o **Source Control**. Ele lista os arquivos que você mudou.
+2. Escreva uma frase dizendo o que fez (ex.: "Adiciona busca por coordenadas").
+3. Clique em **Commit**. Se perguntar se quer incluir todas as mudanças, responda **Yes** (ou **Always**, para não perguntar mais).
 
-1. `git checkout main` volta para a branch principal.
-2. `git pull` traz as novidades que os outros já publicaram.
-3. `git checkout -b nome-da-tarefa` cria a **sua** branch e já entra nela.
+Pode fazer vários commits no meio do caminho. Cada um é um ponto de salvamento.
 
-**Como dar nome à branch:** letras minúsculas e hífens, começando pela área e dizendo o que vai ser feito:
+**Passo 4 — Enviar**
+1. Depois do primeiro commit, o botão azul vira **"Publish Branch"**. Clique nele. Nos commits seguintes, o botão se chama **"Sync Changes"**.
+2. No GitHub, clique em **"Compare & pull request"** → **"Create pull request"**.
+3. Siga para a [seção 3](#3-pull-request-o-mesmo-final-para-todo-mundo).
+
+**Passo 5 — Depois do merge**
+1. Clique no nome da branch no canto inferior esquerdo e escolha **`main`**.
+2. Clique nas **setas circulares** para trazer a versão nova.
+3. Para apagar a branch velha do computador: no **Source Control**, clique nos **"…"** → **Branch** → **Delete Branch…** e escolha a branch.
+
+Para a próxima tarefa, volte ao Passo 1.
+
+#### Como dar nome à branch
+
+Letras minúsculas e hífens, sem espaços nem acentos. Comece pela área e diga o que vai fazer:
 
 | Área | Exemplos |
 |---|---|
 | Site / interface | `front-busca-coordenadas`, `front-perfil-da-rota` |
 | Dados | `dados-radiacao`, `dados-vento-direcao` |
 | Back-end / rotas | `back-suavizar-rotas` |
-| Design | `design-logo`, `design-cores-paineis` |
-| Documentação | `docs-guia`, `docs-apresentacao` |
+| Design | `design-logo`, `design-cores` |
+| Textos e documentação | `docs-guia`, `docs-apresentacao` |
 
-Antes de começar, **avise no grupo** se a tarefa mexe nos arquivos "disputados": `src/App.jsx` e `src/config/mapConfig.js`.
-
-### Passo 2 — Programar
-
-- Confira de vez em quando em qual branch você está. Ela aparece no canto inferior esquerdo do VS Code, ou com `git branch` (a atual tem `*`).
-- Salve sempre (`Ctrl + S`, ou Auto Save ligado).
-- Teste no navegador com o `npm run dev` ligado. O Vite atualiza a página sozinho a cada arquivo salvo.
-- Prefira **criar arquivos novos** a editar os grandes. Um componente novo em `src/components/` dá menos conflito que mexer muito no `App.jsx`.
-- Pode fazer vários commits no meio do caminho. É bom ter "pontos de salvamento":
-
-  ```bash
-  git add .
-  git commit -m "o que você fez, em poucas palavras"
-  ```
-
-**A tarefa está demorando dias?** Traga as novidades da `main` para a sua branch de vez em quando, para não ficar muito para trás:
-
-```bash
-git pull origin main
-```
-
-Se aparecer `CONFLICT`, veja [Deu problema?](#5-deu-problema).
-
-### Passo 3 — Conferir antes de enviar
-
-Rode estes comandos na raiz do projeto:
-
-```bash
-npm run build
-npm run lint
-```
-
-E, se você mexeu na pasta `backend/`:
-
-```bash
-cd backend
-python -m pytest
-cd ..
-```
-
-| Comando | Resultado esperado |
-|---|---|
-| `npm run build` | Termina com `built in …`. O aviso amarelo de "chunks larger than 500 kB" é normal. |
-| `npm run lint` | `Found 0 warnings and 0 errors.` |
-| `python -m pytest` | Todos os testes com `passed`, nenhum `failed`. |
-
-**Se algum falhar, não envie ainda.** Leia a mensagem: ela diz o arquivo e a linha do problema. Se travar, peça ajuda no grupo.
-
-Depois, confira o que vai ser enviado:
-
-```bash
-git status
-```
-
-Na lista **não pode** aparecer: `node_modules/`, `dist/`, `.env.local`, `__pycache__/`, nem arquivos de dados enormes (como o MOLA de 2 GB). Se aparecer algo que você não reconhece, pergunte antes de seguir.
-
-### Passo 4 — Enviar e abrir o Pull Request
-
-```bash
-git add .
-git commit -m "o que a tarefa faz, em poucas palavras"
-git push -u origin nome-da-tarefa
-```
-
-O `-u origin nome-da-tarefa` só é necessário no **primeiro** push da branch. Nos seguintes, basta `git push`.
-
-> Se aparecer **"Push direto na main bloqueado"**, a trava funcionou: você estava na `main` sem querer. Veja [Deu problema?](#5-deu-problema).
-
-Depois, no GitHub:
-
-1. Abra o repositório. Vai aparecer uma faixa amarela com o botão **"Compare & pull request"**. Clique nele.
-2. Confira se está **`base: main` ← `compare: nome-da-tarefa`**.
-3. Escreva na descrição **o que mudou e como testar**. Exemplo: "Adiciona a busca por coordenadas na barra superior. Para testar: digite 40.3, 202.3 e aperte Enter."
-4. Clique em **"Create pull request"**.
-5. Em um ou dois minutos, o Netlify comenta no PR com o link do **Deploy Preview**. Abra e teste a sua mudança ali, de preferência também no celular.
-6. Avise no grupo que o PR está pronto para revisão.
-
-### Passo 5 — Depois do merge
-
-Quem revisa testa o Deploy Preview e, estando tudo certo, clica em **"Merge pull request"**. A partir daí:
-
-- O **Netlify** publica o site oficial em um ou dois minutos.
-- O **Render** atualiza a API, se algo no `backend/` mudou.
-- A branch é apagada do GitHub (manualmente pelo botão **"Delete branch"** do PR, ou sozinha, se a opção automática estiver ligada no repositório).
-
-No seu computador, volte para a `main` atualizada e apague a branch velha:
-
-```bash
-git checkout main
-git pull
-git branch -d nome-da-tarefa
-```
-
-Pronto. Para a próxima tarefa, comece de novo pelo [Passo 1](#passo-1--antes-de-escrever-qualquer-código).
-
-### Resumo de bolso
-
-> 1. `git checkout main` → `git pull` → `git checkout -b nome-da-tarefa`
-> 2. Programe, salve, teste no navegador.
-> 3. `npm run build` + `npm run lint` (+ `python -m pytest` se mexeu no `backend/`).
-> 4. `git add .` → `git commit -m "..."` → `git push -u origin nome-da-tarefa` → abrir o PR.
-> 5. Depois do merge: `git checkout main` → `git pull` → `git branch -d nome-da-tarefa`.
+> ⚠️ **Antes de mexer em `src/App.jsx` ou `src/config/mapConfig.js`, avise no grupo.** São os arquivos que quase todo mundo usa, e dois mexendo ao mesmo tempo dá conflito.
 
 ---
 
-## 5. Deu problema?
+## 3. Pull Request: o mesmo final para todo mundo
 
-**A regra geral: não entre em pânico e não apague nada.** Quase tudo no Git tem volta. Na dúvida, mande no grupo um print do terminal.
+1. Depois de criar o PR, escreva na descrição **o que mudou e como testar**. Exemplo: "Adiciona o valor da radiação. Para testar: abra Condições atmosféricas → Radiação."
+2. Em 1 a 2 minutos, o **Netlify** comenta no PR com o link do **Deploy Preview**. Abra e confira a sua mudança, de preferência também no celular.
+3. Olhe o resultado das verificações no PR:
+   - **✅ verde:** o site foi montado sem erro.
+   - **❌ vermelho:** o site **não** foi montado. Abra o link "Latest deploy log" do comentário do Netlify para ver o erro, ou peça ajuda no grupo. **Não faça merge com ❌.**
+4. Avise no grupo que o PR está pronto.
+5. Quem revisa testa o Deploy Preview e clica em **"Merge pull request"**. Em 1 a 2 minutos, o site oficial é atualizado.
+6. Depois do merge, clique em **"Delete branch"** no próprio PR.
 
-### "Push direto na main bloqueado"
+Quem faz o merge é combinado no grupo. Normalmente é o Guilherme.
 
-A trava funcionou: você fez commits estando na `main`. Leve esses commits para uma branch nova:
+---
 
-```bash
-git checkout -b nome-da-tarefa
-git push -u origin nome-da-tarefa
-```
+## 4. Deu problema?
 
-O primeiro comando cria a branch **com os seus commits dentro**. Depois, deixe a sua `main` igual à do GitHub:
+**Regra geral: não entre em pânico e não apague nada.** Quase tudo tem volta. Na dúvida, mande um print no grupo.
 
-```bash
-git checkout main
-git reset --hard origin/main
-```
+### Fiz commit na `main` sem querer (VS Code no computador)
 
-⚠️ Só rode o `reset --hard` **depois** de criar a branch. Antes disso, ele apagaria os seus commits.
+**Se ainda não enviou:**
+1. Clique no nome `main` no canto inferior esquerdo → **"Create new branch…"** → dê um nome. Os seus commits vão junto para a branch nova.
+2. Clique em **"Publish Branch"** e siga normalmente para o PR.
+3. Para limpar a sua `main`, abra o terminal (**Terminal → New Terminal**) e rode:
 
-### Comecei a programar e esqueci de criar a branch (ainda não fiz commit)
+   ```
+   git checkout main
+   git reset --hard origin/main
+   ```
 
-Sem problema. Crie a branch agora: as mudanças não salvas vão junto com você.
+   ⚠️ Só faça o passo 3 **depois** do passo 1. Antes disso, ele apagaria os seus commits.
 
-```bash
-git checkout -b nome-da-tarefa
-```
+**Se a trava estiver ligada,** o VS Code mostra o erro "Push direto na main bloqueado" ao tentar enviar. É sinal de que a trava funcionou: siga os passos acima.
 
-### Apareceu "CONFLICT" no `git pull origin main`
+### Comecei a mexer e esqueci de criar a branch (ainda sem commit)
 
-Alguém mudou as mesmas linhas que você. No VS Code, os arquivos com conflito aparecem marcados. Em cada trecho marcado, escolha **"Accept Current"** (a sua versão), **"Accept Incoming"** (a versão da `main`) ou **"Accept Both"**. Depois:
-
-```bash
-git add .
-git commit -m "Resolve conflito com a main"
-```
-
-Se não tiver certeza de qual versão manter, **pare e chame quem mexeu no mesmo arquivo**. Para desistir e voltar como estava antes do `pull`:
-
-```bash
-git merge --abort
-```
-
-### O site abriu uma tela branca ou com mensagem de erro
-
-O `ErrorBoundary` do site mostra a mensagem do erro na tela. Leia o que ela diz, ou aperte `F12` e abra a aba **Console**: normalmente ela mostra o arquivo e a linha. O erro mais comum é um arquivo salvo pela metade ou um nome errado num `import`.
+Sem problema. Clique no nome `main` → **"Create new branch…"**. As mudanças vão junto com você.
 
 ### Quero desfazer as mudanças de um arquivo
 
-Para voltar o arquivo ao último commit:
+No **Source Control**, passe o mouse sobre o arquivo e clique na **seta curva ↶** ("Discard Changes"). O arquivo volta ao último commit. ⚠️ Não tem volta.
 
-```bash
-git restore caminho/do/arquivo
-```
+### Quero desfazer o último commit (ainda não enviado)
 
-Para desfazer **tudo** que ainda não foi commitado (cuidado: isso não tem volta):
+No **Source Control**, clique nos **"…"** → **Commit** → **Undo Last Commit**. As mudanças continuam nos arquivos, só o commit é desfeito.
 
-```bash
-git restore .
-```
+### Apareceu um conflito
 
-### Um subfiltro mostra "sem dados", mas o dado existe
+Alguém mudou as mesmas linhas que você. O VS Code marca os arquivos com **"!"** na seção **"Merge Changes"**. Abra cada um e, em cada trecho marcado, clique em:
 
-Quase sempre o `id` está escrito diferente em algum lugar. Ele precisa ser **idêntico** no `mapConfig.js` e no `manifest.json` ou no `regional.json`. Veja [Como as peças conversam](#7-como-as-peças-conversam).
+- **"Accept Current Change":** fica a sua versão.
+- **"Accept Incoming Change":** fica a versão da `main`.
+- **"Accept Both Changes":** ficam as duas.
 
-### O site mostra "Terreno SINTÉTICO" nas rotas
+Depois, salve e faça o commit normalmente. **Se não tiver certeza de qual versão manter, chame quem mexeu no mesmo arquivo antes de decidir.**
 
-A API não achou o arquivo `backend/dados/elevacao_m.npy`. Confira se ele existe na pasta. Se existir, desligue a API (`Ctrl + C`) e ligue de novo.
+### O PR mostra ❌ vermelho no Netlify
 
-### `uvicorn` ou `pip` "não é reconhecido"
+O site não foi montado, quase sempre por um erro de digitação no código. Abra o "Latest deploy log" no comentário do Netlify: perto do fim aparece o arquivo e a linha do problema. Corrija na mesma branch, faça um novo commit e envie: o Netlify tenta de novo sozinho.
 
-Use `python -m uvicorn …` e `python -m pip …`.
+### O site abriu uma tela branca ou com mensagem de erro
 
-### Erro `Attribute "app" not found`
+O site mostra a mensagem do erro na tela. Leia o que ela diz, ou aperte `F12` e abra a aba **Console**: normalmente aparece o arquivo e a linha.
 
-O arquivo `api.py` não foi salvo. Aperte `Ctrl + S` e ligue a API de novo.
+### Um filtro mostra "sem dados", mas o dado existe
 
-### Alguém fez push na `main` e o site oficial quebrou
+O `id` está escrito diferente em algum lugar. Ele precisa ser **idêntico** no `mapConfig.js` e no `manifest.json` ou no `regional.json`. Veja a [seção 6](#6-como-as-peças-conversam).
 
-1. **Na hora:** no painel do Netlify, vá em **Deploys**, clique no último deploy que funcionava e em **"Publish deploy"**. O site volta à versão boa em segundos.
-2. **Com calma:** desfaça o commit problemático numa branch, por PR:
+### As rotas mostram "Terreno SINTÉTICO" no meu computador
 
-   ```bash
-   git checkout main
-   git pull
-   git checkout -b desfaz-erro
-   git log --oneline
-   git revert CODIGO-DO-COMMIT
-   git push -u origin desfaz-erro
-   ```
+A API não achou o arquivo `backend/dados/elevacao_m.npy`. Confira se ele existe e ligue a API de novo.
 
-   O `git log --oneline` mostra os commits com um código curto, como `1d04913`. Use esse código no `git revert`. O `revert` cria um commit novo que anula o antigo, sem apagar o histórico.
+### O site oficial quebrou depois de um merge
 
-### A API publicada demora ~50 segundos para responder
+1. **Na hora:** no painel do **Netlify**, vá em **Deploys**, clique no último deploy que funcionava e em **"Publish deploy"**. O site volta em segundos.
+2. **Com calma:** abra o PR que causou o problema no GitHub e clique em **"Revert"**, no fim da página. O GitHub cria um PR que desfaz a mudança, e é só fazer o merge dele.
 
-É normal: o plano gratuito do Render "dorme" quando ninguém usa. Antes de apresentar, abra `https://ares-mars.onrender.com/status` para acordar a API.
+### A API publicada demora ~50 segundos
+
+É normal: o plano gratuito do Render "dorme" quando ninguém usa. Antes de apresentar, abra `https://ares-mars.onrender.com/status` para acordá-la.
 
 ---
 
-## 6. Mapa do projeto
+## 5. Mapa do projeto
 
 ### O que é o site
 
-O ARES tem duas telas:
+Duas telas:
 
-1. **Globo 3D:** Marte inteiro, com as luas e o Sol. O botão **Descer** faz a animação de aproximação até a área de estudo.
-2. **Mapa 2D:** a área de estudo (pontos AP, na fronteira Arcadia/Amazonis), com:
-   - **Painel esquerdo:** filtros científicos (pastas com subfiltros).
-   - **Painel direito:** inspeção do ponto clicado.
-   - **Painel inferior:** planejamento de rotas com o algoritmo A*.
+1. **Globo 3D:** Marte inteiro. O botão **Descer** faz a animação até a área de estudo.
+2. **Mapa 2D:** a área de estudo (pontos AP, na fronteira Arcadia/Amazonis), com os **filtros** à esquerda, a **inspeção** do ponto clicado à direita e o **planejador de rotas** embaixo.
 
-| Parte | Tecnologia |
-|---|---|
-| Interface | React + Vite |
-| Estilo | Tailwind CSS 4 |
-| Globo 3D | three.js |
-| Mapa 2D | Leaflet (via react-leaflet) |
-| Rotas e dados (back-end) | Python: FastAPI, numpy, rasterio |
-| Publicação | Netlify (site) e Render (API) |
+O site é feito em **React + Vite**, com **Leaflet** (mapa 2D), **three.js** (globo) e **Tailwind** (estilo). As rotas vêm de uma **API em Python**. O site fica no **Netlify** e a API, no **Render**.
 
 ### As pastas
 
 ```
 ares-mars/
-├── .githooks/               A trava que impede push direto na main
-├── backend/                 Rotas (API) e preparação dos dados, em Python
-│   └── dados/               Dados recortados que vão para o GitHub (relevo, SWIM, TES, USGS, rochas)
-├── public/                  Arquivos servidos direto, sem processamento
-│   └── data/
-│       ├── layers/          Camadas dos filtros: *.png, *.bin e manifest.json
-│       └── regional.json    Valores regionais (um número para a área toda)
-├── src/                     Todo o código do site
-│   ├── api/                 Dados fixos usados pelo globo
-│   ├── assets/              Texturas e imagens
-│   ├── components/          Pedaços reutilizáveis da interface
-│   ├── config/              Configurações centrais (área, filtros, pontos, rotas)
-│   ├── hooks/               Lógica reutilizável do React
-│   ├── mock/                Dados de TESTE (não são científicos)
-│   ├── services/            Leitura das camadas e comunicação com a API
-│   ├── views/               As duas telas: globo e mapa
-│   ├── App.jsx              O "esqueleto" que junta tudo
-│   ├── index.css            Estilos globais
-│   └── main.jsx             Ponto de entrada do React
-├── .env.local               (cada um cria o seu) Endereço da API; não vai para o GitHub
-├── .gitattributes           Garante que a trava funcione no Windows
-├── index.html               Página base
-└── package.json             Lista de dependências e comandos
+├── src/                     O código do site
+│   ├── config/mapConfig.js  ⭐ Filtros, área de estudo, pontos AP e cores das rotas
+│   ├── components/          Painéis: filtros, inspeção, rotas, legenda
+│   ├── views/               As duas telas: GlobeView.jsx e MapView.jsx
+│   ├── services/            Leitura das camadas e conversa com a API
+│   ├── App.jsx              ⚠️ O "esqueleto" que junta tudo
+│   └── index.css            Estilos globais
+├── public/data/             Dados prontos que o site lê
+│   ├── layers/              Imagens e valores dos filtros (+ manifest.json)
+│   └── regional.json        ✏️ Valores regionais, editáveis à mão
+├── backend/                 API de rotas e preparação dos dados (Python)
+│   └── dados/               Dados recortados (relevo, SWIM, TES, USGS, rochas)
+├── .githooks/               A trava contra envio direto para a main
+└── GUIA_DO_PROJETO.md       Este guia
 ```
 
-### Arquivo por arquivo: o site (`src/`)
+### Os arquivos que mais se mexe
 
-| Arquivo | O que faz | Mexer? |
+| Arquivo | Para quê | Quem costuma mexer |
 |---|---|---|
-| `main.jsx` | Liga o React ao `index.html` e carrega o `App`. | Quase nunca |
-| `App.jsx` | O esqueleto: troca entre globo e mapa, os painéis e os estados compartilhados (camada ligada, ponto clicado, rota). | ⚠️ Avise o grupo antes |
-| `index.css` | Estilos globais: fundo, marcadores do mapa, barra de rolagem. | Sim (design) |
-| `App.css` | Sobra do modelo do Vite, praticamente vazio. | Não |
-| `views/GlobeView.jsx` | O globo 3D (three.js). As configurações da câmera ficam no topo do arquivo. | Sim (front) |
-| `views/MapView.jsx` | O mapa 2D (Leaflet). Desenha, de baixo para cima: relevo, camada científica, contorno da área, rotas e marcadores. | Sim (front) |
-| `components/FilterList.jsx` | A lista de filtros (pastas e subfiltros, um ligado por vez). | Sim (front) |
-| `components/InspectionPanel.jsx` | O painel direito: os valores de cada camada no ponto clicado e a fonte do dado. | Sim (front) |
-| `components/RoutePanel.jsx` | O painel de rotas: origem, destino, cálculo e os cartões de cada modo. | Sim (front) |
-| `components/MapLegend.jsx` | A legenda da camada ligada (barra de cores, categorias, limite de detecção). | Sim (front) |
-| `components/MapNotice.jsx` | O cartão de valor regional e o aviso "em preparação". | Sim (front) |
-| `components/ErrorBoundary.jsx` | Mostra o erro na tela em vez de deixar tudo preto. | Raramente |
-| `config/mapConfig.js` | ⭐ A configuração central: área de estudo, locais candidatos, filtros e subfiltros, modos de rota. | ⚠️ Avise o grupo antes |
-| `hooks/useLayerManifest.js` | Lê o `manifest.json` e o `regional.json` e junta os dois. | Raramente |
-| `services/layerValues.js` | Lê o valor de uma camada num ponto e formata para a tela. | Raramente |
-| `services/routeApi.js` | O único lugar que conversa com a API de rotas. | Raramente |
-| `mock/points.js`, `mock/routes.js` | Pontos e rotas de **teste**, sempre marcados como teste. | Substituir por dados reais |
-| `api/regions.json` | Regiões e pontos desenhados no globo. | Sim |
+| `src/config/mapConfig.js` | Filtros e subfiltros, pontos AP, área de estudo, cores das rotas | Saulo, Willian (⚠️ avise antes) |
+| `public/data/regional.json` | Os números regionais (clima, radiação, rochas…) | Saulo, Willian |
+| `src/components/*.jsx` | Os painéis do site | Front-end |
+| `src/views/*.jsx` | O globo e o mapa | Front-end |
+| `src/index.css` | Cores e estilos | Design, front-end |
+| `src/App.jsx` | O esqueleto do site | Front-end (⚠️ avise antes) |
+| `backend/*.py` | Rotas e preparação dos dados | Saulo, Anthony |
 
-### Arquivo por arquivo: o back-end (`backend/`)
+### Não mexa à mão
 
-| Arquivo | O que faz |
+| Arquivo | Por quê |
 |---|---|
-| `api.py` | A API de rotas (FastAPI): `GET /status` e `POST /rota`. Prepara o terreno uma vez ao ligar; depois, cada rota leva menos de 1 segundo. |
-| `main.py` | Programa de linha de comando do Saulo: lê o MOLA, calcula o terreno e as rotas e gera mapas e relatórios. Tem o modo interativo (`--interativo`). |
-| `route_comparison.py` | Roda os três modos de rota e calcula as métricas. |
-| `astar.py` | O algoritmo A* na grade (8 direções, sem cortar quinas). |
-| `terrain_analyzer.py` | Declividade, orientação e rugosidade (TRI). |
-| `obstacle_detection.py` | Obstáculos (declividade > 15°, rugosidade extrema, depressões fechadas) e folga até o obstáculo mais próximo. |
-| `dem_processor.py` | Grade, coordenadas e leitura do MOLA. Define os pontos AP. |
-| `data_sources.py` | Catálogo das fontes de dados e registro de procedência. |
-| `export_layers.py` | Gera as camadas dos filtros para o site (`public/data/layers/`): relevo, SWIM, TES e geologia. |
-| `figure_to_data.py` | Converte **figuras** de mapas globais (imagem + barra de cores) em valores aproximados. Usado no TES e nas rochas. |
-| `clip_usgs_geology.py` | Recorta o mapa geológico global da USGS para a região do site. Roda uma vez. |
-| `synthetic_fixture.py` | Terreno **artificial**, usado só se o `dados/elevacao_m.npy` não existir. |
-| `visualization.py`, `interactive.py` | Mapas do matplotlib e o modo interativo do `main.py`. |
-| `tests/`, `pytest.ini` | Testes automáticos (`python -m pytest`). |
-| `requirements.txt` | Bibliotecas Python do back-end. |
-
-| Pasta de dados | Conteúdo |
-|---|---|
-| `backend/dados/elevacao_m.npy` | Relevo real recortado (MOLA, grade de 200 m). A API usa este arquivo. |
-| `backend/dados/swim/` | Mapas de compatibilidade com gelo do SWIM. |
-| `backend/dados/tes/` | Figuras dos mapas minerais do TES. |
-| `backend/dados/usgs/` | Recorte do mapa geológico da USGS. |
-| `backend/dados/rochas/` | Figura da abundância de rochas. |
-| `backend/outputs/`, `backend/data/` | Saídas do `main.py` e o MOLA baixado. **Não vão para o GitHub.** |
-
-### Arquivos da raiz
-
-| Arquivo | O que é | Mexer? |
-|---|---|---|
-| `.env.local` | Endereço da API. Cada um cria o seu. | Sim, no seu computador |
-| `.githooks/pre-push` | A trava contra push direto na `main`. | Não |
-| `.gitattributes` | Mantém a trava funcionando no Windows. | Não |
-| `index.html` | Página base onde o React é montado. | Raramente |
-| `package.json` | Dependências e comandos (`npm run dev` etc.). | Só via `npm install nome-da-biblioteca` |
-| `package-lock.json` | Versões exatas instaladas. | **Nunca à mão** |
-| `vite.config.js`, `postcss.config.js`, `tailwind.config.js` | Configurações do Vite e do Tailwind. | Não |
-| `.oxlintrc.json` | Regras do `npm run lint`. | Não |
-| `.gitignore` | O que o Git ignora (`node_modules`, `dist`, `.env.local`…). | Raramente |
-| `README.md` | Apresentação do projeto. | Sim |
-| `KANBAM.md` | Quadro de tarefas. | Sim |
-| `RETROSPECTIVA_ARES.md` | História do projeto, dados e decisões. | Sim |
-| `GUIA_DO_PROJETO.md` | Este guia. | Sim, quando o jeito de trabalhar mudar |
+| `public/data/layers/manifest.json` | É gerado pelo `backend/export_layers.py`. O que for mudado à mão some na próxima geração. |
+| `package-lock.json` | É gerado pelo `npm install`. |
+| `node_modules/`, `dist/` | São gerados automaticamente e nem vão para o GitHub. |
+| `.githooks/`, `.gitattributes` | Fazem a trava funcionar. |
 
 ---
 
-## 7. Como as peças conversam
+## 6. Como as peças conversam
 
-### Filtros e camadas
-
-```
-backend/dados/           export_layers.py         public/data/layers/          site
-(arquivos brutos)   ──►  (roda no computador) ──►  *.png  *.bin           ──►  mapa, legenda
-                         só quando os dados        manifest.json               e painel
-                         mudam
-                                                   public/data/regional.json   cartões
-                                                   (editado À MÃO)             regionais
-```
-
-O trabalho pesado (ler o MOLA, recortar, calcular) é feito **uma vez**, no computador. O site só lê arquivos prontos e pequenos, por isso carrega rápido.
-
-Cada camada vira três coisas:
-
-- **`.png`:** a imagem colorida desenhada no mapa.
-- **`.bin`:** os números de verdade, que o painel lê quando você clica num ponto.
-- **Uma entrada no `manifest.json`:** nome, legenda, fonte e confiança.
-
-**A regra de ouro dos dados:** o `id` de cada subfiltro tem que ser **exatamente igual** nos dois lados:
+### Filtros
 
 ```
-src/config/mapConfig.js           public/data/layers/manifest.json
-id: 'swim-ci'               ⟷     "id": "swim-ci"          (camadas com imagem)
-                                  ou
-                                  public/data/regional.json
-                                  "id": "mcd-temperatura"  (valores regionais)
+backend/dados/  ──►  export_layers.py  ──►  public/data/layers/  ──►  mapa e painel
+(dados brutos)       (roda no computador)   (imagens + valores)
+
+                                            public/data/regional.json  ──►  cartões regionais
+                                            (editado à mão)
 ```
 
-Se os ids baterem, a etiqueta "sem dados" some sozinha e a camada aparece.
+**A regra de ouro:** o `id` de cada subfiltro precisa ser **idêntico** dos dois lados.
+
+```
+src/config/mapConfig.js           public/data/regional.json (ou layers/manifest.json)
+id: 'mcd-temperatura'       ⟷     "id": "mcd-temperatura"
+```
+
+Se os ids baterem, a etiqueta "sem dados" some sozinha.
 
 ### Rotas
 
-```
-RoutePanel.jsx ──(origem, destino)──► App.jsx ──► routeApi.js
-                                                     │
-                       com .env.local ◄──────────────┴──────────► sem .env.local
-                             │                                         │
-                  POST /rota na API (backend/)                 mock/routes.js
-                  A* do Saulo, 3 modos, < 1 s                  (rotas de teste)
-                             │                                         │
-                             └──────────► mesmo formato ◄──────────────┘
-                                               │
-                              App.jsx ──► MapView.jsx (linhas) + RoutePanel.jsx (cartões)
-```
+O painel de rotas manda origem e destino para a API (`POST /rota`), que devolve as três rotas calculadas pelo A*. Sem a API configurada, o site usa **rotas de teste** e avisa na tela.
 
-A API e as rotas de teste devolvem **o mesmo formato**. Trocar uma pela outra é só criar ou apagar o `.env.local`.
+- **No site publicado:** a API do Render, configurada no Netlify.
+- **No seu computador:** crie um arquivo `.env.local` na raiz com a linha `VITE_ROUTE_API_URL=http://localhost:8000` e ligue a API num terminal, dentro da pasta `backend`, com `python -m uvicorn api:app --reload`. Instale antes as bibliotecas com `python -m pip install -r requirements.txt`. O `.env.local` é pessoal e não vai para o GitHub.
 
-### O formato entre o site e a API
+As coordenadas são sempre **latitude °N** e **longitude leste, de 0 a 360**.
+
+---
+
+## 7. Quem mexe em quê
+
+| Pessoa / área | Onde trabalha | Jeito sugerido |
+|---|---|---|
+| **Programador geral** (Guilherme) | Todo o projeto, principalmente `src/`. Revisa e faz o merge dos Pull Requests | VS Code no computador |
+| **Coordenação e back-end** (Saulo) | `backend/`, `regional.json` e filtros no `mapConfig.js` | VS Code no computador |
+| **Conteúdo científico** (Isabelly) | Textos sobre os locais e os filtros: `info` no `mapConfig.js` e regiões do globo em `src/api/regions.json` | Site do GitHub ou github.dev |
+| **Dados** (Willian) | `backend/dados/`, `public/data/` e `mapConfig.js` | Site do GitHub ou github.dev |
+| **Design e apresentação** (Victor) | `src/index.css`, cores no `mapConfig.js` e `src/assets/`. Slides, junto com o Anthony (fora do repositório) | github.dev |
+| **Matemática, física e apresentação** (Anthony) | Pesos e declividade em `backend/` e unidades no `mapConfig.js`. Slides, junto com o Victor (fora do repositório) | Site do GitHub ou github.dev |
+---
+
+## 8. Receitas rápidas
+
+Toda receita começa **numa branch nova** e termina num **Pull Request**.
+
+### Preencher ou mudar um valor regional
+
+Arquivo: `public/data/regional.json`. Dá para fazer pelo [Jeito 1](#jeito-1-pelo-site-do-github-mais-fácil). Cada valor é um bloco assim:
 
 ```json
-// O site manda (POST /rota):
-{ "origem":  { "lat": 39.8,  "lon": 202.1 },
-  "destino": { "lat": 40.75, "lon": 201.3 } }
-
-// A API devolve os TRÊS modos de uma vez:
-{ "sintetico": false,
-  "reta_km": 66.9,
-  "rotas": [
-    { "modo": "menor_distancia", "encontrada": true,
-      "pontos": [[39.8, 202.1], [39.81, 202.09]],
-      "distancia_km": 71.4, "declividade_max": 1.2, "declividade_media": 0.2,
-      "folga_min_m": 39300, "ganho_m": 40, "perda_m": 35, "motivo": null },
-    { "modo": "maior_seguranca", "...": "..." },
-    { "modo": "multicriterio",   "...": "..." }
-  ] }
+{
+  "id": "raios-cosmicos",
+  "value": 230,
+  "unit": "mSv/ano",
+  "decimals": 0,
+  "seasons": [],
+  "note": "Frase curta que aparece no cartão.",
+  "source": {
+    "instrument": "Instrumento ou modelo",
+    "mission": "Missão",
+    "date": "Período da medição",
+    "resolution_m": null,
+    "confidence": "Se é medição, modelo ou estimativa, e de onde."
+  }
+}
 ```
 
-Os pontos vão em `[latitude, longitude]`, com longitude **sempre em graus leste, de 0 a 360**. Se nenhuma rota for encontrada (ponto fora da área, por exemplo), a API responde com erro 422 e o motivo, que o site mostra ao usuário.
+Os valores acima são só um exemplo do formato. **Cuidados que evitam quebrar o arquivo inteiro:**
 
----
+- Número **sem aspas**: `"value": 29.3` ✅ — `"value": "29.3"` ❌
+- **Ponto** decimal: `29.3` ✅ — `29,3` ❌
+- **Sem vírgula** depois do último item de um bloco ou lista.
+- Ainda sem dado? Use `null`, sem aspas. O site mostra "em preparação".
+- Estimativa em texto? Use o campo opcional `"display"` (ex.: `"display": "Intermediária"`).
 
-## 8. Quem mexe em quê
-
-| Pessoa / área | Onde trabalha principalmente |
-|---|---|
-| **Front-end** (Guilherme) | `src/App.jsx`, `src/components/`, `src/views/`, `src/services/`, `src/index.css` |
-| **Back-end / rotas** (Saulo) | `backend/`, `src/config/mapConfig.js` (filtros e pontos) |
-| **Dados** (Willian) | `backend/dados/`, `public/data/`, `src/config/mapConfig.js` |
-| **Design** (Victor) | `src/index.css`, cores no `mapConfig.js`, `src/assets/` |
-| **Matemática e física** (Anthonelo) | Lógica das rotas em `backend/` (pesos, declividade), unidades e fontes no `mapConfig.js` |
-
-Quem faz o **merge** dos Pull Requests é combinado no grupo. Normalmente é o Guilherme, depois de testar o Deploy Preview.
-
----
-
-## 9. Receitas rápidas
-
-Todas as receitas começam pelo [Passo 1 do ciclo de trabalho](#passo-1--antes-de-escrever-qualquer-código), com uma branch nova, e terminam com um Pull Request.
+Se aparecer algo sublinhado de **vermelho**, o arquivo tem um erro. Corrija antes de salvar.
 
 ### Adicionar um subfiltro
 
-No `src/config/mapConfig.js`, dentro da pasta certa em `FILTERS`, acrescente uma linha:
+Arquivo: `src/config/mapConfig.js`. Dentro da pasta certa em `FILTERS`, acrescente uma linha:
 
 ```js
 { id: 'meu-subfiltro', name: 'Nome que aparece', unit: 'K', source: 'Instrumento' },
 ```
 
-Para agrupar vários subfiltros sob um subtítulo, use `group` (itens do mesmo grupo ficam em sequência na lista):
-
-```js
-{ id: 'olivina', group: 'Composição mineralógica', name: 'Olivina', source: 'TES' },
-```
-
-Enquanto não houver dado com o mesmo `id`, o subfiltro mostra "sem dados". Isso é esperado.
+Para agrupar sob um subtítulo, acrescente `group: 'Nome do grupo'`. Itens do mesmo grupo ficam em sequência. Enquanto não houver dado com o mesmo `id`, o subfiltro mostra "sem dados", o que é esperado.
 
 ### Criar uma pasta de filtros nova
 
@@ -591,117 +406,67 @@ No `mapConfig.js`, acrescente um bloco em `FILTERS`:
 
 O ícone vem de [lucide.dev/icons](https://lucide.dev/icons) e precisa ser importado na primeira linha do arquivo.
 
-### Preencher ou mudar um valor regional
+### Mudar um local candidato (AP)
 
-Valores regionais são um número só para a área toda, como os do Mars Climate Database. Ficam em `public/data/regional.json`, que **pode ser editado à mão**. Exemplo de um item:
-
-```json
-{
-  "id": "raios-cosmicos",
-  "value": 230,
-  "unit": "mSv/ano",
-  "decimals": 0,
-  "seasons": [],
-  "note": "Texto curto que aparece no cartão.",
-  "source": {
-    "instrument": "Nome do instrumento ou modelo",
-    "mission": "Missão",
-    "date": "Período da medição",
-    "resolution_m": null,
-    "confidence": "Se é medição, modelo ou estimativa, e de onde."
-  }
-}
-```
-
-Os valores acima são só um exemplo do formato. Cuidados que evitam quebrar o arquivo inteiro:
-
-- **Número sem aspas:** `"value": 29.3` ✅, `"value": "29.3"` ❌.
-- **Ponto decimal, não vírgula:** `29.3` ✅, `29,3` ❌.
-- **Sem vírgula depois do último item** de uma lista ou bloco.
-- Para "ainda sem dado", use `null` (sem aspas). O site mostra "em preparação".
-- Para uma estimativa em texto, use o campo opcional `"display"` (ex.: `"display": "Intermediária"`).
-
-Se o VS Code sublinhar algo de vermelho, o JSON está inválido. Corrija antes de salvar.
-
-### Refazer as camadas dos filtros
-
-Só é preciso quando os dados mudam (dado novo do SWIM, do TES etc.). As camadas usam as grades que o `main.py` gera na pasta `backend/outputs/`, que não vai para o GitHub. Então, na primeira vez em cada computador:
-
-```bash
-cd backend
-python main.py --mola /vsicurl/https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_DEM_mosaic_global_463m.tif
-```
-
-O `/vsicurl/` lê do servidor da USGS só o pedaço da área de estudo, sem baixar os 2 GB. Depois, sempre que precisar:
-
-```bash
-python export_layers.py
-```
-
-> ⚠️ **Não edite o `public/data/layers/manifest.json` à mão.** O `export_layers.py` reescreve o arquivo inteiro toda vez que roda, e o que você mudou à mão some. Para mudar algo de uma camada (cor, opacidade, texto da fonte), mude no `export_layers.py` e rode de novo.
-
-Rodar o `export_layers.py` regrava também as imagens antigas, que podem aparecer como "modificadas" no `git status` mesmo sem mudança visível. Se quiser um commit limpo, desfaça as que você não pretendia mudar com `git restore caminho/da/imagem.png`.
-
-### Converter uma figura de mapa em dados
-
-Quando a fonte só existe como imagem (mapa global com barra de cores), o `figure_to_data.py` estima os valores na área de estudo:
-
-```bash
-cd backend
-python figure_to_data.py caminho/da/figura.png --vmin 0 --vmax 1
-```
-
-Troque `--vmin` e `--vmax` pelos valores das pontas da barra de cores da figura. O resultado é uma **estimativa** e deve ser apresentado como tal.
-
-### Publicar uma camada científica nova
-
-1. Coloque o dado bruto em `backend/dados/`.
-2. Acrescente a leitura dele no `export_layers.py`, seguindo o modelo das camadas do SWIM ou do TES.
-3. Rode `python export_layers.py`.
-4. Confira se o `id` gerado é igual ao do subfiltro no `mapConfig.js`.
-
-Os campos de `source` (instrumento, data, resolução e confiança) aparecem no painel de inspeção. Campos vazios aparecem como "pendente".
-
-### Adicionar ou mudar um local candidato
-
-No `mapConfig.js`, edite `CANDIDATE_SITES` (latitude °N, longitude °E de 0 a 360). Os mesmos pontos estão no `backend/dem_processor.py` (`POIS`). **Mantenha os dois iguais.**
+No `mapConfig.js`, edite `CANDIDATE_SITES` (latitude °N, longitude °E de 0 a 360). Os mesmos pontos estão em `backend/dem_processor.py` (`POIS`): **mantenha os dois iguais**.
 
 ### Mudar a área de estudo
 
-No `mapConfig.js`, edite `STUDY_AREA.bounds`: `[[sul, oeste], [norte, leste]]`. A API calcula a área dela a partir dos pontos AP, então **avise o Saulo**: os dois lados precisam continuar iguais.
+No `mapConfig.js`, edite `STUDY_AREA.bounds`: `[[sul, oeste], [norte, leste]]`. **Avise o Saulo**: a API precisa usar a mesma área.
 
 ### Mudar as cores das rotas
 
 No `mapConfig.js`, edite `ROUTE_MODES` (`color` e `dash`, o tracejado).
 
+### Refazer as camadas dos filtros (equipe de dados)
+
+Só quando os dados brutos mudam. Precisa do Python e de um terminal, dentro da pasta `backend`:
+
+```
+python -m pip install -r requirements.txt
+python main.py --mola /vsicurl/https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_DEM_mosaic_global_463m.tif
+python export_layers.py
+```
+
+O `main.py` só é necessário na primeira vez em cada computador: ele lê do servidor da USGS apenas o pedaço da área de estudo e gera as grades em `backend/outputs/`. Depois, basta o `export_layers.py`. Para mudar algo de uma camada (cor, opacidade, texto da fonte), mude no `export_layers.py`, e não no `manifest.json`.
+
+### Converter uma figura de mapa em dados
+
+Quando a fonte só existe como imagem (mapa global com barra de cores), dentro da pasta `backend`:
+
+```
+python figure_to_data.py caminho/da/figura.png --vmin 0 --vmax 1
+```
+
+Troque `--vmin` e `--vmax` pelos valores das pontas da barra de cores. O resultado é uma **estimativa** e deve ser apresentado como tal.
+
 ### Instalar uma biblioteca nova
 
-- **Site:** na raiz, `npm install nome-da-biblioteca`. O `package.json` e o `package-lock.json` mudam sozinhos.
-- **Python:** acrescente a biblioteca no `backend/requirements.txt` e rode `python -m pip install -r requirements.txt`.
+- **Site:** no terminal, `npm install nome-da-biblioteca`.
+- **Python:** acrescente a biblioteca no `backend/requirements.txt`.
 
-Avise no grupo: depois do `git pull`, todo mundo precisa rodar `npm install` (ou o `pip install`) de novo.
-
----
-
-## 10. Convenções do projeto
-
-- **Coordenadas:** latitude em °N; longitude em **graus leste, de 0 a 360** (nunca "graus oeste"). Vale para o site, a API e o código de rotas.
-- **Nomes de componentes** começam com maiúscula (`FilterList.jsx`, não `filterList.jsx`). O Windows não diferencia, mas o servidor de publicação sim, e o site quebra lá.
-- **Dados de teste** sempre identificados (`mock: true`, "Rota de TESTE", "Terreno SINTÉTICO"). Nunca coloque valores inventados como se fossem reais.
-- **Estimativas** sempre marcadas como estimativa no campo de confiança (como os dados do TES e das rochas).
-- **Dados de outro lugar de Marte:** nunca apresente como medição da área de estudo. Indique quando for modelo, estimativa ou medição feita em outro local.
-- **Área de estudo:** os pontos AP ficam na fronteira entre Arcadia e Amazonis Planitia. Na apresentação, descreva assim.
-- **Arquivos grandes de dados brutos** (MOLA, shapefile global da USGS) **não vão para o GitHub.** Só os recortes pequenos.
+Avise no grupo: depois de trazer a versão nova, todo mundo precisa rodar `npm install` (ou `python -m pip install -r requirements.txt`) de novo.
 
 ---
 
-## 11. Pendências conhecidas
+## 9. Combinados do projeto
+
+- **Coordenadas:** latitude °N e longitude **leste, de 0 a 360** (nunca "graus oeste").
+- **Nomes de componentes** começam com maiúscula (`FilterList.jsx`). O Windows não liga, mas o servidor de publicação liga, e o site quebra lá.
+- **Dados de teste** sempre marcados como teste. **Estimativas** sempre marcadas como estimativa. Nunca coloque valores inventados como se fossem reais.
+- **Dados medidos em outro lugar de Marte** nunca são apresentados como medição da área de estudo.
+- **Área de estudo:** na apresentação, descreva como "fronteira entre Arcadia e Amazonis Planitia".
+- **Arquivos grandes** (como o MOLA, de 2 GB) não vão para o GitHub. Só os recortes pequenos.
+
+---
+
+## 10. Pendências
 
 | Pendência | Onde |
 |---|---|
-| Radiação (único subfiltro sem dado): valor do RAD/Curiosity e referência | `public/data/regional.json` |
+| Radiação, o único filtro sem dado: valor do RAD/Curiosity e referência | `public/data/regional.json` |
 | Abundância de rochas em %: fonte original e barra de cores da figura | `public/data/regional.json` |
 | Direção do vento | `public/data/regional.json` |
 | Substituir os pontos de teste | `src/mock/points.js` |
 | Coordenadas do globo diferentes das do mapa 2D | `src/api/regions.json` |
-| Abas explicativas para cada subfiltro | `mapConfig.js` (campo `info`) + painel de inspeção |
+| Abas explicativas para cada subfiltro | `mapConfig.js` + painel de inspeção |
