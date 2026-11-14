@@ -50,7 +50,7 @@ Situação em 13/11/2026:
 |---|---|
 | Globo 3D | ✅ Pronto (com configurações de câmera e texturas 2K/8K) |
 | Mapa 2D com relevo real | ✅ Pronto |
-| Filtros | ✅ 15 de 22 subfiltros com dados reais |
+| Filtros | ✅ 21 de 22 subfiltros com dados (só falta a radiação) |
 | Rotas com relevo real | ✅ Prontas e publicadas |
 | Site publicado (Netlify) | ✅ No ar |
 | API de rotas publicada (Render) | ✅ No ar, com dados reais |
@@ -67,7 +67,7 @@ O desafio pede uma **visão integrada e em camadas** de um local ou rota em Mart
 | Topografia e inclinação | Relevo, inclinação, rugosidade e obstáculos calculados a partir do MOLA (Mars Global Surveyor) |
 | Condições térmicas e atmosféricas | Temperatura, pressão, densidade, vento e poeira (Mars Climate Database) |
 | Radiação | Subfiltro previsto; dado ainda em preparação |
-| Geologia e áreas de interesse | Relevo e inclinação já prontos; minerais do TES em preparação |
+| Geologia e áreas de interesse | Relevo, inclinação, minerais e poeira do TES (estimativa) e unidades geológicas da USGS |
 | Recursos (gelo/água) | Seis produtos do SWIM, que combina radar SHARAD, MOLA, TES e THEMIS |
 | Rotas seguras | A* com três modos, desviando de obstáculos e pesando inclinação e rugosidade |
 | Formato | Sistema digital interativo (site), que também funciona como "painel do habitat" |
@@ -308,16 +308,17 @@ A regra que liga tudo: **o `id` do subfiltro no `mapConfig.js` é igual ao `id` 
 |---|---|---|
 | Relevo e altitude | ✅ Camada | MOLA; −4.155 a −3.746 m (escala de cores de −3.990 a −3.890 m, onde estão 98% dos valores) |
 | Inclinação do terreno | ✅ Camada | Calculada do MOLA; 0 a 7,3° (escala 0–2°: 99% da área está abaixo de 2°) |
-| Silicatos/vidro (alto Si) | ⏳ Em preparação | TES (faltam os arquivos de dados) |
-| Quartzo | ⏳ Em preparação | TES |
-| K-feldspato | ⏳ Em preparação | TES |
-| Poeira superficial | ⏳ Em preparação | TES |
+| Silicatos/vidro (alto Si) | ✅ Camada (estimativa) | TES, figura convertida; mediana ~2% na área, abaixo do limite de detecção (10%) quase em toda parte |
+| Quartzo | ✅ Camada (estimativa) | TES; não detectado em toda a área |
+| K-feldspato | ✅ Camada (estimativa) | TES; máximo ~6%, abaixo do limite de detecção |
+| Poeira superficial | ✅ Camada (estimativa) | TES; mediana ~0,86 (escala 0–1): área muito empoeirada |
 
 **Condições atmosféricas**
 
 | Subfiltro | Situação | Valor (Mars Climate Database v6.2) |
 |---|---|---|
 | Temperatura | ✅ Regional | 228,1 K (≈ −45 °C) |
+| Infravermelho térmico na superfície | ✅ Regional | 29,3 W/m² (calor irradiado pela atmosfera; não é radiação ionizante) |
 | Pressão atmosférica | ✅ Regional | 843,9 Pa |
 | Densidade | ✅ Regional | 0,0194 kg/m³ |
 | Ventos | ✅ Regional | 4,9 m/s (só velocidade) |
@@ -331,17 +332,16 @@ O momento dos valores do MCD: **Ls 21,3°** (início da primavera no norte), cer
 | Subfiltro | Situação | Fonte / valor na área |
 |---|---|---|
 | Consistência do gelo | ✅ Camada | SWIM, 3 km/px; 0,03 a 0,48 |
-| Refletores de radar profundos | ✅ Camada | SWIM/SHARAD, 4,7 km/px; cobre 45% da área (faixas das passagens do radar) |
 | Potência do radar na superfície | ✅ Camada | SWIM, 3 km/px; −1 a +1 |
 | Propriedades dielétricas | ✅ Camada | SWIM, 3 km/px; 0,57 a 0,88 |
-| Análise térmica | ✅ Regional | SWIM; 0 em toda a área |
-| Geomorfologia | ✅ Regional | SWIM; 0 em toda a área |
+| Análise térmica | ✅ Regional | SWIM; 0 (neutro) em toda a área |
+| Geomorfologia | ✅ Regional | SWIM; 0 (neutro) em toda a área |
 | Rugosidade (TRI) | ✅ Camada | Calculada do MOLA; 0 a 20 m (escala 0–5 m) |
 | Obstáculos ao deslocamento | ✅ Camada | Critérios do algoritmo de rotas; rugosidade extrema e depressões fechadas |
-| Abundância de rochas | ⏳ Em preparação | Falta um mapa com coordenadas |
-| Atividade vulcânica | ⏳ Em preparação | Falta definir a fonte |
+| Abundância de rochas | ✅ Regional (qualitativo) | Figura global sem barra de cores: "intermediária" (~0,47 na escala da figura, acima de ~66% do planeta) |
+| Unidades geológicas e vulcanismo | ✅ Camada | USGS SIM 3292 (Tanaka et al., 2014): área toda na unidade Av (lavas da era Amazoniana); a ponta de uma crista enrugada entra ~10 km pela borda sul |
 
-**Total: 15 de 22 com dados reais** (10 camadas no mapa e 7 valores regionais, contando o relevo de fundo à parte).
+**Total: 21 de 22 com dados** (12 camadas no mapa e 9 valores regionais, contando o relevo de fundo à parte). Só falta a radiação. Os refletores de radar do SWIM saíram do site: não são índice de compatibilidade (decisão da equipe de dados).
 
 ### 7.3 Escolhas importantes
 
@@ -360,14 +360,18 @@ O momento dos valores do MCD: **Ls 21,3°** (início da primavera no norte), cer
 | Relevo (elevação) | MOLA, Mars Global Surveyor, mosaico global do USGS (`Mars_MGS_MOLA_DEM_mosaic_global_463m.tif`, 2 GB) | Lido pela internet (`/vsicurl/`), recortado | `backend/dados/elevacao_m.npy` (API) e `public/data/layers/` (site) | 463 m (grade de 200 m) |
 | Declividade, rugosidade, obstáculos | Calculados pelo código do Saulo a partir do MOLA | `.npy` | `backend/outputs/npy/` (local) e `public/data/layers/` | Grade de 200 m |
 | Gelo/água (7 produtos) | SWIM (Subsurface Water Ice Mapping) | GeoTIFF com coordenadas (0–60°N, 188–208°E) | `backend/dados/swim/` | 3 km (refletores: 4,7 km) |
-| Atmosfera (5 variáveis) | Mars Climate Database v6.2 | Texto (grade lat × lon) | Valores em `public/data/regional.json` | Modelo global |
+| Atmosfera (6 variáveis) | Mars Climate Database v6.2 | Texto (grade lat × lon) | Valores em `public/data/regional.json` | Modelo global |
+| Minerais e poeira (4 mapas) | TES, Mars Global Surveyor | Figuras globais convertidas em valores (`figure_to_data.py`) | `backend/dados/tes/` | 4 px/grau (~15 km) |
+| Unidades geológicas | USGS SIM 3292 (Tanaka et al., 2014) | Shapefile recortado em GeoJSON (`clip_usgs_geology.py`) | `backend/dados/usgs/` | Escala 1:20.000.000 |
+| Rochas (estimativa) | Figura global recebida pela equipe | Imagem 360 × 180 sem barra de cores | `backend/dados/rochas/` | 1 px/grau |
 
 ### 8.2 Dados recebidos, mas ainda não usados
 
 | Dado | Por que ainda não entrou |
 |---|---|
-| TES, mapas minerais (1, 2 e 4 pixels por grau) | Vieram só os cabeçalhos `.hdr`, sem os dados; e as 13 bandas não têm nome |
-| `Wdn.tif` (SWIM) | Não sabemos o que significa; só 4 valores diferentes na área |
+| TES, arquivos `.hdr` (1, 2 e 4 pixels por grau) | Vieram só os cabeçalhos, sem os dados; usamos as figuras no lugar |
+| `Wdn.tif` e `Reflectors.tif` (SWIM) | Não são índices de compatibilidade; fora do site por decisão da equipe de dados |
+| Foto do mapa geológico da USGS | Sem coordenadas nem legenda; substituída pelo mapa digital SIM 3292 |
 | Mapas do MCD em imagem (temperatura, pressão, densidade, H) | Substituídos pelos números em texto, que são precisos |
 | Imagens globais (TES, IRTM, raios cósmicos, gelo em globos) | Sem coordenadas ou sem escala de cores; servem só como referência visual |
 | Gráficos do código de rotas (imagens 11 a 18) | Ótimos para a apresentação; as camadas do site foram geradas dos números originais |
@@ -521,6 +525,14 @@ ares-mars/
 - **Cinco valores regionais do MCD** e **seis produtos do SWIM** (quatro camadas e dois regionais).
 - Filtros: **de 4 para 15 de 22** com dados reais.
 
+### 14/11: TES, USGS e mais dados do MCD
+- API passa a usar o relevo real por padrão (fim do "Terreno SINTÉTICO" ao ligar no computador).
+- **Conversor de figuras** (`figure_to_data.py`): acha o mapa e a barra de cores na figura e lê o valor pelo matiz da cor. Testado na própria barra (erro ≤ ~3–4% da escala).
+- **TES:** silicatos/vidro, quartzo, K-feldspato e poeira superficial, com marcação do limite de detecção (10%).
+- **USGS SIM 3292:** unidades geológicas em volta da área e cristas enrugadas; a área toda é lava da era Amazoniana.
+- **MCD:** infravermelho térmico na superfície. **Rochas:** estimativa qualitativa. **SWIM:** só índices de compatibilidade.
+- Filtros: **de 15 para 21 de 22** com dados.
+
 ---
 
 ## 13. Histórico de Pull Requests
@@ -554,12 +566,11 @@ ares-mars/
 ## 15. O que ainda falta
 
 ### Dados (Saulo e Willian)
-- [ ] **TES:** os arquivos de dados (vieram só os `.hdr`) e o nome de cada uma das 13 bandas.
-- [ ] **Radiação:** dose anual na área e a fonte do modelo.
-- [ ] **Abundância de rochas:** um mapa com coordenadas.
-- [ ] **Atividade vulcânica:** definir a fonte (ex.: mapa geológico do USGS).
+- [ ] **Radiação:** valor de dose do RAD (Curiosity, em Gale) e a referência do artigo, para mostrar como medição de outro local com altitude parecida.
+- [ ] **Abundância de rochas:** fonte original e barra de cores da figura, para converter a estimativa em %.
 - [ ] **Vento:** a direção, além da velocidade.
-- [ ] **Confirmar a escala do SWIM** (−1 a +1?), o significado do 0 na análise térmica e na geomorfologia, a unidade dos refletores e o que é o `Wdn`.
+- [ ] **Atmosfera:** valores em outros horários e estações (hoje é um único instante).
+- [ ] (opcional) **TES:** arquivo de dados `.envi` que acompanha os `.hdr`, para valores exatos no lugar da estimativa.
 - [ ] Confirmar a coordenada do AP-8 e a referência dos pontos AP.
 
 ### Site (Guilherme)
@@ -586,8 +597,8 @@ ares-mars/
 | Item | Quantidade |
 |---|---|
 | Subfiltros planejados | 22 |
-| Subfiltros com dados reais | 15 (10 camadas no mapa + 7 regionais, contando o fundo à parte) |
-| Camadas geradas (`public/data/layers/`) | 9 imagens + 8 arquivos de valores |
+| Subfiltros com dados | 21 (12 camadas no mapa + 9 regionais, contando o fundo à parte) |
+| Camadas geradas (`public/data/layers/`) | 13 imagens + 12 arquivos de valores |
 | Valores no painel ao clicar num ponto | até 14 |
 | Modos de rota | 3 |
 | Tempo para calcular os 3 modos | < 1 s |

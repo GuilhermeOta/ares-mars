@@ -281,7 +281,7 @@
         "mission": "Subsurface Water Ice Mapping (NASA)",
         "date": null,
         "resolution_m": 3000,
-        "confidence": "Índice de consistência com gelo do SWIM: perto de +1 = dado compatível com gelo, perto de -1 = incompatível. Escala a confirmar na documentação do SWIM."
+        "confidence": "Índice de compatibilidade com gelo do SWIM: -1 = incompatível com gelo, 0 = neutro, +1 = compatível com gelo (escala confirmada pela equipe de dados). Indica compatibilidade, não mede a quantidade de gelo."
       }
     },
     {
@@ -331,7 +331,7 @@
         "mission": "Subsurface Water Ice Mapping (NASA)",
         "date": null,
         "resolution_m": 3000,
-        "confidence": "Índice de consistência com gelo do SWIM: perto de +1 = dado compatível com gelo, perto de -1 = incompatível. Escala a confirmar na documentação do SWIM."
+        "confidence": "Índice de compatibilidade com gelo do SWIM: -1 = incompatível com gelo, 0 = neutro, +1 = compatível com gelo (escala confirmada pela equipe de dados). Indica compatibilidade, não mede a quantidade de gelo."
       }
     },
     {
@@ -381,14 +381,14 @@
         "mission": "Subsurface Water Ice Mapping (NASA)",
         "date": null,
         "resolution_m": 3000,
-        "confidence": "Índice de consistência com gelo do SWIM: perto de +1 = dado compatível com gelo, perto de -1 = incompatível. Escala a confirmar na documentação do SWIM."
+        "confidence": "Índice de compatibilidade com gelo do SWIM: -1 = incompatível com gelo, 0 = neutro, +1 = compatível com gelo (escala confirmada pela equipe de dados). Indica compatibilidade, não mede a quantidade de gelo."
       }
     },
     {
-      "id": "swim-reflectors",
-      "filter": "suporte-vida",
-      "label": "Refletores de radar profundos",
-      "image": "swim-reflectors.png",
+      "id": "silica-vidro",
+      "filter": "geologia",
+      "label": "Silicatos em lâmina / vidro (alto Si)",
+      "image": "silica-vidro.png",
       "bounds": [
         [
           39.29838695649359,
@@ -402,8 +402,8 @@
       "opacity": 0.75,
       "legend": {
         "min": 0.0,
-        "max": 55.0,
-        "unit": "",
+        "max": 20.0,
+        "unit": "%",
         "colors": [
           "#440154",
           "#443982",
@@ -414,12 +414,173 @@
           "#fde724"
         ],
         "clipMin": false,
-        "clipMax": true
+        "clipMax": false,
+        "detectionLimit": 10.0
       },
       "values": {
-        "file": "swim-reflectors.bin",
+        "file": "silica-vidro.bin",
         "dtype": "int16",
         "scale": 0.01,
+        "width": 690,
+        "height": 579,
+        "nodata": -32768,
+        "unit": "%",
+        "decimals": 1,
+        "detectionLimit": 10.0
+      },
+      "source": {
+        "instrument": "TES (Thermal Emission Spectrometer)",
+        "mission": "Mars Global Surveyor",
+        "product": "Mapas minerais globais do TES a 4 px/grau (figura convertida em valores pelo ARES)",
+        "date": "Fase de mapeamento do Mars Global Surveyor (a partir de 1999)",
+        "resolution": "4 px/grau (~15 km)",
+        "confidence": "ESTIMATIVA: valores lidos das cores da figura (erro de ~3-4% da escala e posição com incerteza de ~0,3°). Abaixo de 10% o TES não separa o mineral do ruído (limite de detecção): trate esses valores como 'não detectado'."
+      }
+    },
+    {
+      "id": "quartzo",
+      "filter": "geologia",
+      "label": "Quartzo",
+      "image": "quartzo.png",
+      "bounds": [
+        [
+          39.29838695649359,
+          200.79924993184798
+        ],
+        [
+          41.25200299906333,
+          203.850750068152
+        ]
+      ],
+      "opacity": 0.75,
+      "legend": {
+        "min": 0.0,
+        "max": 20.0,
+        "unit": "%",
+        "colors": [
+          "#440154",
+          "#443982",
+          "#30678d",
+          "#20908c",
+          "#35b778",
+          "#90d643",
+          "#fde724"
+        ],
+        "clipMin": false,
+        "clipMax": false,
+        "detectionLimit": 10.0,
+        "note": "Em toda a área: abaixo do limite de detecção do TES (10%)."
+      },
+      "values": {
+        "file": "quartzo.bin",
+        "dtype": "int16",
+        "scale": 0.01,
+        "width": 690,
+        "height": 579,
+        "nodata": -32768,
+        "unit": "%",
+        "decimals": 1,
+        "detectionLimit": 10.0
+      },
+      "source": {
+        "instrument": "TES (Thermal Emission Spectrometer)",
+        "mission": "Mars Global Surveyor",
+        "product": "Mapas minerais globais do TES a 4 px/grau (figura convertida em valores pelo ARES)",
+        "date": "Fase de mapeamento do Mars Global Surveyor (a partir de 1999)",
+        "resolution": "4 px/grau (~15 km)",
+        "confidence": "ESTIMATIVA: valores lidos das cores da figura (erro de ~3-4% da escala e posição com incerteza de ~0,3°). Abaixo de 10% o TES não separa o mineral do ruído (limite de detecção): trate esses valores como 'não detectado'."
+      }
+    },
+    {
+      "id": "k-feldspato",
+      "filter": "geologia",
+      "label": "K-feldspato",
+      "image": "k-feldspato.png",
+      "bounds": [
+        [
+          39.29838695649359,
+          200.79924993184798
+        ],
+        [
+          41.25200299906333,
+          203.850750068152
+        ]
+      ],
+      "opacity": 0.75,
+      "legend": {
+        "min": 0.0,
+        "max": 20.0,
+        "unit": "%",
+        "colors": [
+          "#440154",
+          "#443982",
+          "#30678d",
+          "#20908c",
+          "#35b778",
+          "#90d643",
+          "#fde724"
+        ],
+        "clipMin": false,
+        "clipMax": false,
+        "detectionLimit": 10.0,
+        "note": "Em toda a área: abaixo do limite de detecção do TES (10%)."
+      },
+      "values": {
+        "file": "k-feldspato.bin",
+        "dtype": "int16",
+        "scale": 0.01,
+        "width": 690,
+        "height": 579,
+        "nodata": -32768,
+        "unit": "%",
+        "decimals": 1,
+        "detectionLimit": 10.0
+      },
+      "source": {
+        "instrument": "TES (Thermal Emission Spectrometer)",
+        "mission": "Mars Global Surveyor",
+        "product": "Mapas minerais globais do TES a 4 px/grau (figura convertida em valores pelo ARES)",
+        "date": "Fase de mapeamento do Mars Global Surveyor (a partir de 1999)",
+        "resolution": "4 px/grau (~15 km)",
+        "confidence": "ESTIMATIVA: valores lidos das cores da figura (erro de ~3-4% da escala e posição com incerteza de ~0,3°). Abaixo de 10% o TES não separa o mineral do ruído (limite de detecção): trate esses valores como 'não detectado'."
+      }
+    },
+    {
+      "id": "poeira-superficial",
+      "filter": "geologia",
+      "label": "Poeira superficial",
+      "image": "poeira-superficial.png",
+      "bounds": [
+        [
+          39.29838695649359,
+          200.79924993184798
+        ],
+        [
+          41.25200299906333,
+          203.850750068152
+        ]
+      ],
+      "opacity": 0.75,
+      "legend": {
+        "min": 0.0,
+        "max": 1.0,
+        "unit": "",
+        "colors": [
+          "#ffffe5",
+          "#fef0ae",
+          "#fece65",
+          "#fd9828",
+          "#e1640e",
+          "#a93b03",
+          "#662505"
+        ],
+        "clipMin": false,
+        "clipMax": false
+      },
+      "values": {
+        "file": "poeira-superficial.bin",
+        "dtype": "int16",
+        "scale": 0.001,
         "width": 690,
         "height": 579,
         "nodata": -32768,
@@ -427,11 +588,82 @@
         "decimals": 2
       },
       "source": {
-        "instrument": "SWIM (combina SHARAD, MOLA, TES, THEMIS e outros)",
-        "mission": "Subsurface Water Ice Mapping (NASA)",
-        "date": null,
-        "resolution_m": 4700,
-        "confidence": "Valores do produto de refletores do SWIM (unidade a confirmar). Áreas transparentes: sem refletor detectado/sem dado."
+        "instrument": "TES (Thermal Emission Spectrometer)",
+        "mission": "Mars Global Surveyor",
+        "product": "Mapas minerais globais do TES a 4 px/grau (figura convertida em valores pelo ARES)",
+        "date": "Fase de mapeamento do Mars Global Surveyor (a partir de 1999)",
+        "resolution": "4 px/grau (~15 km)",
+        "confidence": "ESTIMATIVA: valores lidos das cores da figura (erro de ~3-4% da escala e posição com incerteza de ~0,3°). Abundância do componente espectral de poeira: 0 = sem poeira, 1 = superfície coberta de poeira."
+      }
+    },
+    {
+      "id": "atividade-vulcanica",
+      "filter": "suporte-vida",
+      "label": "Unidades geológicas e vulcanismo",
+      "image": "atividade-vulcanica.png",
+      "bounds": [
+        [
+          36.3,
+          196.8
+        ],
+        [
+          44.25,
+          207.85
+        ]
+      ],
+      "opacity": 0.9,
+      "legend": {
+        "categories": [
+          {
+            "color": "#e3799b",
+            "label": "lAv — Unidade vulcânica do Amazoniano tardio"
+          },
+          {
+            "color": "#ffeb33",
+            "label": "AHi — Unidade de impacto Amazoniana-Hesperiana"
+          },
+          {
+            "color": "#af2351",
+            "label": "Av — Unidade vulcânica Amazoniana"
+          },
+          {
+            "color": "#e4e8d3",
+            "label": "lHl — Unidade de planície baixa do Hesperiano tardio"
+          },
+          {
+            "color": "#f5f5f4",
+            "label": "Crista enrugada (wrinkle ridge)"
+          }
+        ]
+      },
+      "values": {
+        "file": "atividade-vulcanica.bin",
+        "dtype": "uint8",
+        "scale": 1,
+        "width": 556,
+        "height": 400,
+        "categories": {
+          "1": "lAv — Unidade vulcânica do Amazoniano tardio",
+          "2": "AHi — Unidade de impacto Amazoniana-Hesperiana",
+          "3": "Av — Unidade vulcânica Amazoniana",
+          "4": "lHl — Unidade de planície baixa do Hesperiano tardio"
+        },
+        "flags": {
+          "128": "sobre uma crista enrugada"
+        },
+        "descriptions": {
+          "1": "Derrames de lava mais jovens da era Amazoniana.",
+          "2": "Materiais de crateras de impacto (bordas e ejetos).",
+          "3": "Planícies de lava da era Amazoniana (últimos ~3 bilhões de anos), vindas da região de Tharsis.",
+          "4": "Planícies das terras baixas do norte, mais antigas (~3,7 a 3,0 bilhões de anos)."
+        }
+      },
+      "source": {
+        "instrument": "Mapa geológico de Marte, USGS SIM 3292",
+        "mission": "Tanaka et al., 2014 (base MOLA e THEMIS)",
+        "date": "Publicado em 2014",
+        "resolution": "Escala 1:20.000.000",
+        "confidence": "Mapa global: os contatos entre unidades têm precisão de quilômetros e feições menores que dezenas de km não aparecem. 'Vulcânica Amazoniana' são lavas antigas: o mapa não indica vulcanismo ativo hoje. As cristas enrugadas são dobras tectônicas típicas de planícies de lava."
       }
     }
   ]

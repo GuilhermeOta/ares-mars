@@ -28,6 +28,16 @@ Front-end: mapa 2D
  [Front] Painel de inspeção do ponto clicado, com fonte, data, resolução e confiança de cada dado
  [Front] Ligação com as camadas exportadas pela equipe de dados (public/data/layers/manifest.json)
 
+Dados e filtros
+
+ [Dados] Relevo sombreado (hillshade), relevo, inclinação, rugosidade e obstáculos exportados do MOLA (export_layers.py)
+ [Dados] SWIM: índices de compatibilidade com gelo (escala confirmada: −1 incompatível, +1 compatível); refletores e Wdn fora, por decisão da equipe de dados
+ [Dados] Mars Climate Database: temperatura, pressão, densidade, vento, poeira e infravermelho térmico (valores regionais)
+ [Dados] TES: silicatos/vidro, quartzo, K-feldspato e poeira superficial, convertidos das figuras (figure_to_data.py), com limite de detecção de 10%
+ [Dados] Atividade vulcânica: mapa geológico da USGS (Tanaka et al., 2014, SIM 3292), recortado por clip_usgs_geology.py
+ [Dados] Abundância de rochas: estimativa qualitativa a partir da figura recebida
+ [Back] API usa o relevo real (backend/dados/elevacao_m.npy) por padrão, sem precisar de variável de ambiente
+
 Rotas
 
  [Back] Implementar o algoritmo A* com dados MOLA, obstáculos e três modos de rota (Saulo)
@@ -35,17 +45,17 @@ Rotas
  [Front] Painel inferior de rotas: escolha de origem/destino, cálculo e comparação dos três modos
  [Front] Conectar o painel de rotas à API e desenhar as rotas no mapa 2D
 🟡 Em Andamento (In Progress)
-[/] [Back] Rodar o main.py com o MOLA real e carregar o elevacao_m.npy na API (hoje a API usa terreno sintético)
 [/] [Design] Refinar componentes da interface visual (painéis translúcidos, filtros científicos e badges)
 [/] [Geral] Juntar as branches mapa-2d e rotas-front na main via Pull Request
 🔴 A Fazer (To Do)
 
 Dados
 
- [Dados] Exportar o relevo sombreado (hillshade) da área como mapa de fundo
- [Dados] Exportar cada subfiltro como PNG + entrada no manifest.json, com o mesmo id do mapConfig.js
- [Dados] Exportar a camada de obstáculos das rotas, para mostrar no mapa por que cada rota desvia
- [Dados] Definir fontes de dados para "Estabilidade do terreno" e "Atividade vulcânica"
+ [Dados] Radiação: valor de dose do RAD (Curiosity, em Gale) e referência do artigo, apresentado como medição de outro local
+ [Dados] Rochas: fonte original e barra de cores da figura, para converter a estimativa em %
+ [Dados] Vento: direção, além da velocidade
+ [Dados] Atmosfera: valores em outros horários e estações (hoje é um instante: Ls 21°, ~13h30)
+ [Dados] (opcional) TES: arquivo de dados .envi dos .hdr, para trocar a estimativa pela figura por valores exatos
  [Dados] Confirmar a coordenada do AP-8 e a referência dos pontos AP (Luzzi et al., 2025)
 
 Front-end

@@ -11,6 +11,7 @@ De onde vem o relevo (variáveis de ambiente, nesta ordem):
 """
 from __future__ import annotations
 import math, os
+from pathlib import Path
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,6 +28,10 @@ AOI = dp.aoi_from_pois(dp.POIS, 0.5)   # (lon_min, lat_min, lon_max, lat_max): m
 def load_grid():
     res = float(os.environ.get("ARES_RES", "200"))
     npy, mola = os.environ.get("ARES_DEM_NPY"), os.environ.get("ARES_MOLA")
+    # Sem variável nenhuma: usa o relevo real que já vem no repositório (backend/dados/, 200 m)
+    padrao = Path(__file__).resolve().parent / "dados" / "elevacao_m.npy"
+    if not npy and not mola and padrao.exists():
+        npy = str(padrao)
     if npy:
         spec = dp.GridSpec.from_aoi(AOI, res)
         z = np.load(npy).astype("float32")

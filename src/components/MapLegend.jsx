@@ -25,17 +25,30 @@ export default function MapLegend({ layer }) {
         </ul>
       ) : (
         <>
-          <div
-            className="h-2.5 rounded-sm"
-            style={{ background: `linear-gradient(to right, ${legend.colors.join(', ')})` }}
-          />
+          <div className="relative">
+            <div
+              className="h-2.5 rounded-sm"
+              style={{ background: `linear-gradient(to right, ${legend.colors.join(', ')})` }}
+            />
+            {/* Limite de detecção do instrumento (ex.: 10% no TES): abaixo dele, "não detectado" */}
+            {legend.detectionLimit != null && (
+              <span
+                className="absolute -top-0.5 -bottom-0.5 w-px bg-white"
+                style={{ left: `${((legend.detectionLimit - legend.min) / (legend.max - legend.min)) * 100}%` }}
+              />
+            )}
+          </div>
           <div className="flex justify-between mt-1 text-zinc-400">
             {/* ≤ e ≥: valores além da faixa aparecem com a cor da ponta */}
             <span>{legend.clipMin ? '≤ ' : ''}{fmt(legend.min)} {legend.unit}</span>
             <span>{legend.clipMax ? '≥ ' : ''}{fmt(legend.max)} {legend.unit}</span>
           </div>
+          {legend.detectionLimit != null && (
+            <p className="mt-1 text-zinc-500">| limite de detecção: {fmt(legend.detectionLimit)} {legend.unit}</p>
+          )}
         </>
       )}
+      {legend.note && <p className="mt-1.5 text-amber-300/90 leading-snug font-sans">{legend.note}</p>}
     </div>
   );
 }

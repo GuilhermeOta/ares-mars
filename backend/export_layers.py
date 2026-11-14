@@ -6,6 +6,11 @@ Lê as grades que o main.py salva em outputs/npy/ e gera, em public/data/layers/
   - <id>.bin        os valores numéricos, para o painel mostrar "elevação aqui: -3.897 m"
   - manifest.json   a lista de camadas que o site lê (com legenda e fonte)
 
+Além do relevo, junta as outras fontes que estão em backend/dados/:
+  - swim/   índices de compatibilidade com gelo do SWIM (GeoTIFF)
+  - tes/    mapas minerais do TES, que vieram como FIGURA (convertidos por figure_to_data.py)
+  - usgs/   recorte do mapa geológico da USGS (gerado por clip_usgs_geology.py)
+
 Uso (dentro da pasta backend/):
     python export_layers.py                      # lê outputs/npy, resolução 200 m
     python export_layers.py --npy outputs/npy --res 200
@@ -25,6 +30,7 @@ from matplotlib.colors import LightSource
 from PIL import Image
 
 import dem_processor as dp
+import figure_to_data as ftd
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_OUT = HERE.parent / "public" / "data" / "layers"
@@ -110,15 +116,17 @@ def save_values(arr: np.ndarray, path: Path, scale: float, dtype: str):
     return info
 
 
-def continuous_layer(lid, label, filt, arr, vmin, vmax, cmap, unit, source, out, bounds, scale, decimals, blocky=False):
+def continuous_layer(lid, label, filt, arr, vmin, vmax, cmap, unit, source, out, bounds, scale, decimals, blocky=False,
+                     legend_extra=None, values_extra=None):
     lat_b, lat_t = bounds[0][0], bounds[1][0]
     # blocky=True: dado de baixa resolução, mantém os "quadrados" nítidos em vez de borrar
     save_png(colorize(to_mercator_rows(arr, lat_b, lat_t, blocky), vmin, vmax, cmap), out / f"{lid}.png")
     return {
         "id": lid, "filter": filt, "label": label, "image": f"{lid}.png", "bounds": bounds, "opacity": 0.75,
         "legend": {"min": vmin, "max": vmax, "unit": unit, "colors": legend_colors(cmap),
-                   "clipMin": bool(np.nanmin(arr) < vmin), "clipMax": bool(np.nanmax(arr) > vmax)},
-        "values": {**save_values(arr, out / f"{lid}.bin", scale, "int16"), "unit": unit, "decimals": decimals},
+                   "clipMin": bool(np.nanmin(arr) < vmin), "clipMax": bool(np.nanmax(arr) > vmax), **(legend_extra or {})},
+        "values": {**save_values(arr, out / f"{lid}.bin", scale, "int16"), "unit": unit, "decimals": decimals,
+                   **(values_extra or {})},
         "source": source,
     }
 
@@ -129,8 +137,9 @@ SWIM_SOURCE = {
     "mission": "Subsurface Water Ice Mapping (NASA)",
     "date": None,
 }
-SWIM_CONSISTENCY = ("Índice de consistência com gelo do SWIM: perto de +1 = dado compatível com gelo, "
-                    "perto de -1 = incompatível. Escala a confirmar na documentação do SWIM.")
+SWIM_CONSISTENCY = ("Índice de compatibilidade com gelo do SWIM: -1 = incompatível com gelo, 0 = neutro, "
+                    "+1 = compatível com gelo (escala confirmada pela equipe de dados). Indica compatibilidade, "
+                    "não mede a quantidade de gelo.")
 
 # id do subfiltro -> (arquivo, nome, resolução original em m)
 SWIM_MAPS = {
@@ -140,7 +149,7 @@ SWIM_MAPS = {
 }
 
 
-def swim_layers(swim_dir: Path, spec, out: Path, bounds):
+def swim_layers(swim_dir: Path, spec, out: Path, bounds, with_reflectors=False):
     """Lê cada GeoTIFF com a MESMA função que lê o MOLA (recorta a área e põe na grade de 200 m).
     'nearest' mantém os valores originais do SWIM, sem inventar valores intermediários."""
     read = lambda name: dp.read_raster_to_grid(str(swim_dir / name), spec, "nearest").z
@@ -154,8 +163,9 @@ def swim_layers(swim_dir: Path, spec, out: Path, bounds):
                                        {**SWIM_SOURCE, "resolution_m": res, "confidence": SWIM_CONSISTENCY},
                                        out, bounds, 0.001, 2, blocky=True))
 
-    # Refletores de radar profundos: outra grandeza (unidade a confirmar) e só parte da área tem dado
-    if (swim_dir / "Reflectors.tif").exists():
+    # Refletores de radar profundos: NÃO é índice de compatibilidade (valores de 0 a ~100, unidade desconhecida).
+    # Por decisão da equipe de dados, o site usa só os índices de compatibilidade; ligue com --swim-refletores.
+    if with_reflectors and (swim_dir / "Reflectors.tif").exists():
         r = read("Reflectors.tif")
         vmax = float(np.ceil(np.nanpercentile(r, 98)))
         layers.append(continuous_layer("swim-reflectors", "Refletores de radar profundos", "suporte-vida", r, 0.0, vmax,
@@ -166,6 +176,169 @@ def swim_layers(swim_dir: Path, spec, out: Path, bounds):
     return layers
 
 
+# ---------------------------------------------------------------- TES (figuras convertidas)
+TES_SOURCE = {
+    "instrument": "TES (Thermal Emission Spectrometer)",
+    "mission": "Mars Global Surveyor",
+    "product": "Mapas minerais globais do TES a 4 px/grau (figura convertida em valores pelo ARES)",
+    "date": "Fase de mapeamento do Mars Global Surveyor (a partir de 1999)",
+    "resolution": "4 px/grau (~15 km)",
+}
+TES_DETECTION_PCT = 10.0   # limite de detecção marcado na barra de cores das figuras (0,1 = 10%)
+TES_ESTIMATE = ("ESTIMATIVA: valores lidos das cores da figura (erro de ~3-4% da escala e posição com incerteza "
+                "de ~0,3°). ")
+# id do subfiltro -> (arquivo, nome, valor máximo da barra de cores da figura, é mineral?)
+TES_MAPS = {
+    "silica-vidro": ("sheet_hi_si_glass_4_ppd_mola_label.tif", "Silicatos em lâmina / vidro (alto Si)", 0.2, True),
+    "quartzo": ("quartz_4_ppd_mola_label.tif", "Quartzo", 0.2, True),
+    "k-feldspato": ("k_feldspar_4_ppd_mola_label.tif", "K-feldspato", 0.2, True),
+    "poeira-superficial": ("surface_dust_4_ppd_mola_label.tif", "Poeira superficial", 1.0, False),
+}
+
+
+def tes_layers(tes_dir: Path, spec, out: Path, bounds):
+    """Figura -> valores (figure_to_data) -> grade de 200 m pelo MESMO leitor do MOLA/SWIM ('nearest')."""
+    layers = []
+    for lid, (fname, label, vmax, mineral) in TES_MAPS.items():
+        if not (tes_dir / fname).exists():
+            continue
+        data, transform = ftd.figure_to_array(tes_dir / fname, 0.0, vmax)
+        mem, path = ftd.to_memory_geotiff(data, transform)
+        with mem:
+            arr = dp.read_raster_to_grid(path, spec, "nearest").z
+        if mineral:
+            arr = arr * 100.0                                 # fração -> %
+            below = bool(np.nanmax(arr) < TES_DETECTION_PCT)
+            legend_extra = {"detectionLimit": TES_DETECTION_PCT}
+            if below:
+                legend_extra["note"] = f"Em toda a área: abaixo do limite de detecção do TES ({TES_DETECTION_PCT:g}%)."
+            conf = TES_ESTIMATE + (f"Abaixo de {TES_DETECTION_PCT:g}% o TES não separa o mineral do ruído "
+                                   "(limite de detecção): trate esses valores como 'não detectado'.")
+            layers.append(continuous_layer(lid, label, "geologia", arr, 0.0, 20.0, "viridis", "%",
+                                           {**TES_SOURCE, "confidence": conf}, out, bounds, 0.01, 1, blocky=True,
+                                           legend_extra=legend_extra,
+                                           values_extra={"detectionLimit": TES_DETECTION_PCT}))
+        else:
+            conf = TES_ESTIMATE + ("Abundância do componente espectral de poeira: 0 = sem poeira, "
+                                   "1 = superfície coberta de poeira.")
+            layers.append(continuous_layer(lid, label, "geologia", arr, 0.0, 1.0, "YlOrBr", "",
+                                           {**TES_SOURCE, "confidence": conf}, out, bounds, 0.001, 2, blocky=True))
+    return layers
+
+
+# ---------------------------------------------------------------- Geologia (USGS SIM 3292)
+# A camada cobre toda a área navegável do mapa 2D (área de estudo ±3° lat / ±4° lon, igual ao MapView),
+# para mostrar onde as unidades geológicas mudam em volta da área.
+GEO_BOUNDS = [[36.3, 196.8], [44.25, 207.85]]
+GEO_SIZE = (400, 556)          # linhas x colunas da grade de valores (~2 km por célula)
+GEO_PNG_FACTOR = 3             # imagem 3x mais fina que a grade, para os contornos ficarem lisos
+RIDGE_FLAG = 128               # bit "sobre uma crista enrugada" no arquivo de valores
+RIDGE_COLOR = "#f5f5f4"       # claro: aparece sobre as unidades e na legenda escura
+
+
+def _cell_centers(rows, cols):
+    (s, w), (n, e) = GEO_BOUNDS
+    lat = n - (np.arange(rows) + 0.5) * (n - s) / rows
+    lon = w + (np.arange(cols) + 0.5) * (e - w) / cols
+    return np.meshgrid(lon, lat)
+
+
+def _polygons(geom):
+    if geom["type"] == "Polygon":
+        return [geom["coordinates"]]
+    if geom["type"] == "MultiPolygon":
+        return geom["coordinates"]
+    return []
+
+
+def _rasterize_units(features, rows, cols):
+    from matplotlib.path import Path as MPath
+    lon, lat = _cell_centers(rows, cols)
+    pts = np.column_stack([lon.ravel(), lat.ravel()])
+    codes = np.zeros(rows * cols, np.uint8)
+    for code, f in features:
+        for rings in _polygons(f["geometry"]):
+            inside = MPath(rings[0]).contains_points(pts)
+            for hole in rings[1:]:
+                inside &= ~MPath(hole).contains_points(pts)
+            codes[inside] = code
+    return codes.reshape(rows, cols)
+
+
+def _rasterize_lines(lines, rows, cols, width_px=0):
+    from scipy import ndimage as ndi
+    (s, w), (n, e) = GEO_BOUNDS
+    mask = np.zeros((rows, cols), bool)
+    for geom in lines:
+        parts = [geom["coordinates"]] if geom["type"] == "LineString" else geom.get("coordinates", [])
+        for coords in parts:
+            c = np.asarray(coords, float)
+            for (x0, y0), (x1, y1) in zip(c[:-1], c[1:]):
+                k = max(2, int(np.hypot((x1 - x0) / (e - w) * cols, (y1 - y0) / (n - s) * rows) * 3))
+                xs, ys = np.linspace(x0, x1, k), np.linspace(y0, y1, k)
+                cc = ((xs - w) / (e - w) * cols).astype(int)
+                rr = ((n - ys) / (n - s) * rows).astype(int)
+                ok = (rr >= 0) & (rr < rows) & (cc >= 0) & (cc < cols)
+                mask[rr[ok], cc[ok]] = True
+    return ndi.binary_dilation(mask, iterations=width_px) if width_px else mask
+
+
+def geology_layer(geojson: Path, out: Path):
+    data = json.loads(geojson.read_text(encoding="utf-8"))
+    units = [f for f in data["features"] if f["properties"]["kind"] == "unidade"]
+    ridges = [f["geometry"] for f in data["features"] if f["properties"]["kind"] == "estrutura"
+              and f["properties"].get("interpretation") == "Wrinkle ridge"]
+
+    # um código (1, 2, 3...) por unidade, na ordem em que aparecem
+    order = []
+    for f in units:
+        if f["properties"]["unit"] not in order:
+            order.append(f["properties"]["unit"])
+    info = {f["properties"]["unit"]: f["properties"] for f in units}
+    coded = [(order.index(f["properties"]["unit"]) + 1, f) for f in units]
+
+    # valores (para o painel): unidade + bit de crista enrugada
+    rows, cols = GEO_SIZE
+    codes = _rasterize_units(coded, rows, cols)
+    codes[_rasterize_lines(ridges, rows, cols) & (codes > 0)] |= RIDGE_FLAG
+
+    # imagem (para o mapa): mais fina, com as cristas desenhadas por cima
+    R, C = rows * GEO_PNG_FACTOR, cols * GEO_PNG_FACTOR
+    fine = _rasterize_units(coded, R, C)
+    fine_ridge = _rasterize_lines(ridges, R, C, width_px=1)
+    lat_b, lat_t = GEO_BOUNDS[0][0], GEO_BOUNDS[1][0]
+    fine = to_mercator_rows(fine, lat_b, lat_t, True)
+    fine_ridge = to_mercator_rows(fine_ridge.astype(np.uint8), lat_b, lat_t, True).astype(bool)
+    hexrgb = lambda h: [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    rgba = np.zeros(fine.shape + (4,))
+    for k, u in enumerate(order, start=1):
+        rgba[fine == k] = (*hexrgb(info[u]["color"]), 0.85)
+    rgba[fine_ridge] = (*hexrgb(RIDGE_COLOR), 0.95)
+    save_png(rgba, out / "atividade-vulcanica.png")
+
+    label = lambda u: f"{u} — {info[u]['name']}"
+    return {
+        "id": "atividade-vulcanica", "filter": "suporte-vida", "label": "Unidades geológicas e vulcanismo",
+        "image": "atividade-vulcanica.png", "bounds": GEO_BOUNDS, "opacity": 0.9,
+        "legend": {"categories": [{"color": info[u]["color"], "label": label(u)} for u in order]
+                                 + [{"color": RIDGE_COLOR, "label": "Crista enrugada (wrinkle ridge)"}]},
+        "values": {**save_values(codes, out / "atividade-vulcanica.bin", 1, "uint8"),
+                   "categories": {str(k): label(u) for k, u in enumerate(order, start=1)},
+                   "flags": {str(RIDGE_FLAG): "sobre uma crista enrugada"},
+                   "descriptions": {str(k): info[u]["desc"] for k, u in enumerate(order, start=1)}},
+        "source": {
+            "instrument": "Mapa geológico de Marte, USGS SIM 3292",
+            "mission": "Tanaka et al., 2014 (base MOLA e THEMIS)",
+            "date": "Publicado em 2014",
+            "resolution": "Escala 1:20.000.000",
+            "confidence": ("Mapa global: os contatos entre unidades têm precisão de quilômetros e feições menores "
+                           "que dezenas de km não aparecem. 'Vulcânica Amazoniana' são lavas antigas: o mapa não "
+                           "indica vulcanismo ativo hoje. As cristas enrugadas são dobras tectônicas típicas de "
+                           "planícies de lava."),
+        },
+    }
+
+
 def main():
     ap = argparse.ArgumentParser(description="Exporta as camadas do relevo para o mapa 2D do ARES.")
     ap.add_argument("--npy", default=str(HERE / "outputs" / "npy"), help="pasta com os .npy do main.py")
@@ -173,6 +346,11 @@ def main():
     ap.add_argument("--out", default=str(DEFAULT_OUT), help="pasta de saída (public/data/layers)")
     ap.add_argument("--vert-exag", type=float, default=12.0, help="exagero vertical do relevo sombreado")
     ap.add_argument("--swim", default=str(HERE / "dados" / "swim"), help="pasta com os GeoTIFFs do SWIM")
+    ap.add_argument("--swim-refletores", action="store_true",
+                    help="inclui os refletores de radar do SWIM (fora do site por decisão da equipe de dados)")
+    ap.add_argument("--tes", default=str(HERE / "dados" / "tes"), help="pasta com as figuras do TES")
+    ap.add_argument("--usgs", default=str(HERE / "dados" / "usgs" / "sim3292_recorte.geojson"),
+                    help="recorte do mapa geológico da USGS (clip_usgs_geology.py)")
     a = ap.parse_args()
 
     npy, out = Path(a.npy), Path(a.out)
@@ -226,9 +404,23 @@ def main():
     # ---------- Água: mapas do SWIM (GeoTIFF com coordenadas, ~3 km por pixel) ----------
     swim_dir = Path(a.swim)
     if swim_dir.is_dir():
-        layers += swim_layers(swim_dir, spec, out, bounds)
+        layers += swim_layers(swim_dir, spec, out, bounds, a.swim_refletores)
     else:
         print(f"(pasta do SWIM não encontrada em {swim_dir}: camadas de água puladas)")
+
+    # ---------- Minerais e poeira: figuras do TES convertidas em valores ----------
+    tes_dir = Path(a.tes)
+    if tes_dir.is_dir():
+        layers += tes_layers(tes_dir, spec, out, bounds)
+    else:
+        print(f"(pasta do TES não encontrada em {tes_dir}: camadas minerais puladas)")
+
+    # ---------- Geologia e vulcanismo: mapa da USGS ----------
+    usgs = Path(a.usgs)
+    if usgs.exists():
+        layers.append(geology_layer(usgs, out))
+    else:
+        print(f"(recorte da USGS não encontrado em {usgs}: rode o clip_usgs_geology.py)")
 
     (out / "manifest.json").write_text(json.dumps({"layers": layers}, ensure_ascii=False, indent=2), encoding="utf-8")
     for l in layers:

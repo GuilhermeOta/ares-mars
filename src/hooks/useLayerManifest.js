@@ -30,14 +30,18 @@ export default function useLayerManifest() {
         .filter((l) => l.image && Array.isArray(l.bounds))
         .map((l) => ({ ...l, url: folder + l.image }));
 
-      // Só entram os valores já preenchidos (value diferente de null)
+      // Só entram os valores já preenchidos (value diferente de null).
+      // `display` (opcional) é um texto que aparece no lugar do número, para estimativas qualitativas.
       const regionals = (regional?.values || [])
         .filter((r) => r.id && typeof r.value === 'number')
         .map((r) => ({
           id: r.id,
           filter: LAYER_BY_ID[r.id]?.filter,
           label: LAYER_BY_ID[r.id]?.name || r.id,
-          regional: { value: r.value, unit: r.unit || '', decimals: r.decimals ?? 1, seasons: r.seasons || [], note: r.note },
+          regional: {
+            value: r.value, unit: r.unit || '', decimals: r.decimals ?? 1, seasons: r.seasons || [], note: r.note,
+            display: r.display || null,
+          },
           source: r.source,
         }));
 

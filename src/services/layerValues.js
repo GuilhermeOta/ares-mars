@@ -49,10 +49,24 @@ export async function sampleLayer(layer, lat, lon) {
   return raw * v.scale;
 }
 
-/** Texto pronto para a tela: "-3.897 m", "0,42°", ou as causas do obstáculo. */
+/**
+ * Texto pronto para a tela: "-3.897 m", "0,42°", as causas do obstáculo,
+ * a unidade geológica ou uma estimativa qualitativa ("Intermediária").
+ */
 export function formatLayerValue(layer, value) {
   if (value == null) return '—';
   const v = layer.values || layer.regional;
+  // Estimativa qualitativa: texto no lugar do número (ex.: abundância de rochas)
+  if (v.display) return v.display;
+  // Categorias (ex.: unidades geológicas): código da categoria + bits extras (ex.: crista enrugada)
+  if (v.categories) {
+    const flagBits = Object.keys(v.flags || {}).reduce((acc, bit) => acc | Number(bit), 0);
+    const name = v.categories[String(value & ~flagBits)] || 'Sem unidade mapeada';
+    const extras = Object.entries(v.flags || {})
+      .filter(([bit]) => value & Number(bit))
+      .map(([, label]) => label);
+    return [name, ...extras].join(' · ');
+  }
   if (v.bits) {
     if (value === 0) return 'Livre';
     return Object.entries(v.bits)
@@ -64,5 +78,10 @@ export function formatLayerValue(layer, value) {
     minimumFractionDigits: v.decimals ?? 0,
     maximumFractionDigits: v.decimals ?? 0,
   });
-  return `${num} ${v.unit || ''}`.trim();
+  const text = `${num} ${v.unit || ''}`.trim();
+  // Abaixo do limite de detecção do instrumento: o número não separa o mineral do ruído
+  if (v.detectionLimit != null && value < v.detectionLimit) {
+    return `~${text} · não detectado`;
+  }
+  return text;
 }

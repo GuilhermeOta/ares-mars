@@ -116,3 +116,36 @@ def test_interactive_selector_headless():
     assert all(d["route"].found for d in s.results.values())
     s.click(201.5, 40.0); assert len(s.points) == 1 and not s.results      # 3º clique recomeça
     s.click(0.0, 0.0); assert "fora do mapa" in s.message                  # clique fora é recusado
+
+
+
+# ---------------- figure_to_data: figura de mapa global -> valores ----------------
+def _fake_figure(tmp_path, values):
+    """Figura sintética: fundo branco, mapa 2:1 colorido pela paleta 'turbo' e barra de cores embaixo."""
+    from matplotlib import colormaps
+    from PIL import Image
+    cmap = colormaps["turbo"]
+    H, W = values.shape
+    img = np.full((H + 120, W + 80, 3), 255, np.uint8)
+    img[30:30 + H, 40:40 + W] = (cmap(values)[..., :3] * 255).astype(np.uint8)
+    bar = (cmap(np.linspace(0, 1, 300))[:, :3] * 255).astype(np.uint8)
+    img[H + 60:H + 90, 60:360] = bar[None, :, :]
+    path = tmp_path / "fig.png"
+    Image.fromarray(img).save(path)
+    return path
+
+
+def test_figure_to_data_reads_values_and_geometry(tmp_path):
+    import figure_to_data as ftd
+    vals = np.tile(np.linspace(0.05, 0.95, 360), (180, 1))      # cresce de oeste para leste
+    data, t = ftd.figure_to_array(_fake_figure(tmp_path, vals), 0.0, 20.0)
+    assert data.shape == (180, 360)
+    assert t.a == pytest.approx(1.0) and t.c == pytest.approx(-180.0) and t.f == pytest.approx(90.0)
+    assert np.nanmax(np.abs(data - vals * 20.0)) < 0.05 * 20.0   # erro < 5% da escala
+
+
+def test_figure_to_data_gray_is_nodata():
+    import figure_to_data as ftd
+    lut = ftd.HueLUT.from_matplotlib("turbo")
+    out = lut(np.array([[[128, 128, 128], [200, 200, 200]]], np.uint8))
+    assert np.isnan(out).all()

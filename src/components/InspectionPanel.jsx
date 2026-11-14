@@ -20,7 +20,7 @@ function SourceBlock({ source }) {
     <div className="mt-2 text-[11px] font-mono">
       <Field label="Instrumento" value={source?.instrument && `${source.instrument}${source.mission ? ` (${source.mission})` : ''}`} />
       <Field label="Data" value={source?.date} />
-      <Field label="Resolução" value={source?.resolution_m && `${source.resolution_m} m/px`} />
+      <Field label="Resolução" value={source?.resolution || (source?.resolution_m && `${source.resolution_m} m/px`)} />
       <Field label="Confiança" value={source?.confidence} />
     </div>
   );
