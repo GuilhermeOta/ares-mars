@@ -57,7 +57,7 @@
       "name":"Cratera Jezero(Perseverance)",
       "type":"cratera",
       "color":"#ffffff",
-      "centrer": {
+      "center": {
         "lat":18.38,
         "lon":77.69
       },
