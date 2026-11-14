@@ -20,9 +20,16 @@ export function RegionalCard({ layer }) {
         <Globe2 className="w-3.5 h-3.5 text-sky-400" />
         {layer.label}
       </p>
-      <p className="mt-1 text-2xl font-mono text-white">
-        {fmt(r.value, r.decimals)} <span className="text-sm text-zinc-400">{r.unit}</span>
-      </p>
+      {r.display ? (
+        // Estimativa qualitativa: o texto vem primeiro e o número aproximado fica ao lado
+        <p className="mt-1 text-2xl font-mono text-white">
+          {r.display} <span className="text-sm text-zinc-400">(~{fmt(r.value, r.decimals)}{r.unit ? ` ${r.unit}` : ''})</span>
+        </p>
+      ) : (
+        <p className="mt-1 text-2xl font-mono text-white">
+          {fmt(r.value, r.decimals)} <span className="text-sm text-zinc-400">{r.unit}</span>
+        </p>
+      )}
       {r.seasons.length > 0 && (
         <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5 font-mono text-[10px] text-zinc-400">
           {r.seasons.map((s) => (

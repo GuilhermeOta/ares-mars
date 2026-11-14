@@ -255,7 +255,10 @@ O código de rotas do Saulo, com a API por cima. A API é só um "embrulho": o c
 | `obstacle_detection.py` | Obstáculos (declividade > 15°, rugosidade extrema, depressões fechadas) e folga até o obstáculo mais próximo. |
 | `dem_processor.py` | Grade regular, coordenadas e leitura do MOLA. Define os pontos AP. |
 | `data_sources.py` | Catálogo das fontes (MOLA, HRSC, CTX) e registro de procedência dos dados. |
-| `synthetic_fixture.py` | Terreno **artificial** para testes. A API usa esse terreno quando liga sem dados reais. |
+| `synthetic_fixture.py` | Terreno **artificial** para testes. A API só usa esse terreno se o `dados/elevacao_m.npy` não existir. |
+| `export_layers.py` | Gera as camadas dos filtros para o site (`public/data/layers/`): relevo, SWIM, TES e geologia. |
+| `figure_to_data.py` | Converte **figuras** de mapas globais (imagem + barra de cores) em valores aproximados. Usado no TES e nas rochas. |
+| `clip_usgs_geology.py` | Recorta o mapa geológico global da USGS (SIM 3292) para a região do site. Roda uma vez; o recorte fica em `dados/usgs/`. |
 | `visualization.py`, `interactive.py` | Mapas do matplotlib e modo interativo do `main.py`. |
 | `tests/`, `pytest.ini` | Testes automáticos. |
 | `requirements.txt` | Bibliotecas Python. |
@@ -347,7 +350,7 @@ Para testar, abra `http://localhost:8000/docs`. Lá dá para mandar uma rota de 
 |---|---|---|
 | `ARES_DEM_NPY` + `ARES_RES` | A grade recortada que o `main.py` salva (`outputs/npy/elevacao_m.npy`) e a resolução usada nela | **Recomendado**, inclusive para hospedar (poucos MB) |
 | `ARES_MOLA` | O GeoTIFF do MOLA, recortado ao ligar | Testes no computador |
-| nenhuma | Terreno sintético | Só para testar a ligação; o site avisa "Terreno SINTÉTICO" |
+| nenhuma | O relevo real em `dados/elevacao_m.npy` (200 m), que já vem no repositório | Uso normal no computador |
 
 Exemplo no PowerShell, depois de rodar o `main.py` com o MOLA real em 200 m:
 
@@ -512,13 +515,9 @@ Os campos de `source` são exatamente o que aparece no painel de inspeção: **i
 
 | Pendência | Onde |
 |---|---|
-| API usando o MOLA real (hoje usa terreno sintético) | `backend/` (rodar `main.py` e usar `ARES_DEM_NPY`) |
-| Relevo real da área (hoje o mapa base é provisório) | `public/data/layers/` |
-| Camadas científicas reais para cada subfiltro | `public/data/layers/` |
-| Camada de obstáculos no mapa, para mostrar por que as rotas desviam | `public/data/layers/` |
+| Radiação (único subfiltro sem dado) | `public/data/regional.json` |
 | Substituir os pontos de teste | `src/mock/points.js` |
 | Coordenadas do globo diferentes das do mapa 2D | `src/api/regions.json` |
-| Fontes de dados para "Estabilidade do terreno" e "Atividade vulcânica" | `mapConfig.js` |
 | Abas explicativas para cada subfiltro | `mapConfig.js` (campo `info`) + painel de inspeção |
 | Juntar as branches de trabalho na `main` | GitHub (Pull Requests) |
 | Hospedar a API e publicar o site | Render/Railway + Vercel/Cloudflare Pages |

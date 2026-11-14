@@ -6,3 +6,6 @@ rasterio>=1.3      # leitura/escrita GeoTIFF, reprojeção (GDAL)
 pytest>=8.0
 fastapi>=0.110
 uvicorn>=0.29
+pillow>=10.0       # figuras do TES (figure_to_data.py) e PNGs das camadas
+pyshp>=2.3         # só para o clip_usgs_geology.py (lê o shapefile da USGS)
+shapely>=2.0       # só para o clip_usgs_geology.py

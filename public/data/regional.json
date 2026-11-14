@@ -1,5 +1,5 @@
 {
-  "_instrucoes": "Valores regionais do centro da área de estudo (40,3°N, 202,3°E). Troque cada null pelo número (sem aspas). O que ficar null continua aparecendo como 'em preparação' no site. 'seasons' é opcional: lista de valores por estação, no formato {\"label\": \"Verão N (Ls 90°)\", \"value\": 215}. Preencha também a 'source' com a fonte real de cada dado.",
+  "_instrucoes": "Valores regionais do centro da área de estudo (40,3°N, 202,3°E). Troque cada null pelo número (sem aspas). O que ficar null continua aparecendo como 'em preparação' no site. 'seasons' é opcional: lista de valores por estação, no formato {\"label\": \"Verão N (Ls 90°)\", \"value\": 215}. Preencha também a 'source' com a fonte real de cada dado. 'display' é opcional: texto que aparece no lugar do número (para estimativas qualitativas, como as rochas).",
   "values": [
     {
       "id": "mcd-temperatura",
@@ -8,6 +8,21 @@
       "decimals": 1,
       "seasons": [],
       "note": "Cerca de -45 °C, no início da tarde.",
+      "source": {
+        "instrument": "Mars Climate Database v6.2",
+        "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
+        "date": "Ls 21,3° (início da primavera no norte), ~13h30 hora local, 10 m acima do solo, cenário de clima médio",
+        "resolution_m": null,
+        "confidence": "Modelo de circulação global, não é medição local. Valor do ponto da grade em 40°N, 202°E (borda da área)."
+      }
+    },
+    {
+      "id": "mcd-fluxo-ir",
+      "value": 29.3,
+      "unit": "W/m²",
+      "decimals": 1,
+      "seasons": [],
+      "note": "Calor (infravermelho) que a atmosfera irradia e que chega ao solo. NÃO é a radiação ionizante dos raios cósmicos, que afeta a saúde dos astronautas.",
       "source": {
         "instrument": "Mars Climate Database v6.2",
         "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
@@ -97,13 +112,13 @@
       "unit": "",
       "decimals": 0,
       "seasons": [],
-      "note": "Mesmo valor em toda a área (o mapa do SWIM não varia aqui).",
+      "note": "Neutro (0): nesta área, a análise térmica do SWIM não indica nem favorece nem contraria a presença de gelo.",
       "source": {
         "instrument": "SWIM (combina SHARAD, MOLA, TES, THEMIS e outros)",
         "mission": "Subsurface Water Ice Mapping (NASA)",
         "date": null,
         "resolution_m": 3000,
-        "confidence": "Índice do SWIM igual em toda a área de estudo. Interpretação da escala a confirmar na documentação do SWIM."
+        "confidence": "Índice de compatibilidade com gelo do SWIM, igual em toda a área de estudo. Escala confirmada pela equipe de dados: -1 = incompatível, 0 = neutro, +1 = compatível."
       }
     },
     {
@@ -112,13 +127,29 @@
       "unit": "",
       "decimals": 0,
       "seasons": [],
-      "note": "Mesmo valor em toda a área (o mapa do SWIM não varia aqui).",
+      "note": "Neutro (0): nesta área, a geomorfologia do SWIM não indica nem favorece nem contraria a presença de gelo.",
       "source": {
         "instrument": "SWIM (combina SHARAD, MOLA, TES, THEMIS e outros)",
         "mission": "Subsurface Water Ice Mapping (NASA)",
         "date": null,
         "resolution_m": 3000,
-        "confidence": "Índice do SWIM igual em toda a área de estudo. Interpretação da escala a confirmar na documentação do SWIM."
+        "confidence": "Índice de compatibilidade com gelo do SWIM, igual em toda a área de estudo. Escala confirmada pela equipe de dados: -1 = incompatível, 0 = neutro, +1 = compatível."
+      }
+    },
+    {
+      "id": "rochas-irtm",
+      "value": 0.47,
+      "display": "Intermediária",
+      "unit": "",
+      "decimals": 2,
+      "seasons": [],
+      "note": "Posição na escala de cores da figura (0 = mínimo, 1 = máximo): ~0,47, acima de ~66% do planeta. Sem a legenda original não dá para converter em %.",
+      "source": {
+        "instrument": "Mapa global de abundância de rochas (figura recebida pela equipe de dados)",
+        "mission": null,
+        "date": null,
+        "resolution": "1 px/grau (~60 km)",
+        "confidence": "ESTIMATIVA QUALITATIVA: lida das cores de uma figura sem barra de cores, em que a área de estudo inteira ocupa ~3 x 2 pixels (python figure_to_data.py rochas). Fonte original e valor em % a confirmar."
       }
     }
   ]
