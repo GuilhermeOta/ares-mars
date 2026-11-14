@@ -1,36 +1,6 @@
 {
   "mars_regions": [
     {
-      "id": "arcadia-planitia",
-      "name": "ARCADIA PLANITIA",
-      "type": "plain",
-      "color": "#f59e0b",
-      "center": {
-        "lat": 44.5,
-        "lon": 188.0
-      },
-      "geometry": {
-        "dLatScale": 5.5,
-        "dLonScale": 16.0,
-        "labelOffsetLat": 1.5
-      }
-    },
-    {
-      "id": "amazonis-planitia",
-      "name": "AMAZONIS PLANITIA",
-      "type": "plain",
-      "color": "#38bdf8",
-      "center": {
-        "lat": 34.5,
-        "lon": 189.0
-      },
-      "geometry": {
-        "dLatScale": 6.5,
-        "dLonScale": 17.0,
-        "labelOffsetLat": 0.0
-      }
-    },
-    {
       "id": "olympus-mons",
       "name": "OLYMPUS MONS",
       "type": "volcano",
@@ -77,6 +47,32 @@
       "center": {
         "lat": 40.02,
         "lon": 203.35
+      },
+      "geometry": {
+        "labelOffsetLat": -0.8
+      }
+    },
+    {
+      "id": "gale",
+      "name": "Cratera Gale (Curiosity)",
+      "type": "landing_site",
+      "color": "#22d3ee",
+      "center": {
+        "lat": -4.5895,
+        "lon": 137.4417
+      },
+      "geometry": {
+        "labelOffsetLat": -0.8
+      }
+    },
+    {
+      "id": "jezero",
+      "name": "Cratera Jezero (Perseverance)",
+      "type": "landing_site",
+      "color": "#22d3ee",
+      "center": {
+        "lat": 18.38,
+        "lon": 77.69
       },
       "geometry": {
         "labelOffsetLat": -0.8
