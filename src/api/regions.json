@@ -40,32 +40,6 @@
       }
     },
     {
-      "id":"Gale",
-      "name":"Cratera Gale(Curiosity)",
-      "type":"cratera",
-      "color":"#ffffff",
-      "center": {
-        "lat":4.5895,
-        "lon":137.4417
-      },
-      "geometry": {
-        "labelOffsetLat":-0.8
-      }
-    }, 
-    {
-      "id":"Jezero",
-      "name":"Cratera Jezero(Perseverance)",
-      "type":"cratera",
-      "color":"#ffffff",
-      "center": {
-        "lat":18.38,
-        "lon":77.69
-      },
-      "geometry": {
-        "labelOffsetLat":-0.8
-      }
-    },
-    {
       "id": "ap-9",
       "name": "AP-9",
       "type": "landing_site",
