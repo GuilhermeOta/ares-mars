@@ -67,13 +67,29 @@
       "unit": "m/s",
       "decimals": 1,
       "seasons": [],
-      "note": "Só a velocidade; a direção ainda não está disponível.",
+      "note": "Velocidade do vento perto do solo. A direção está no subfiltro \"Direção do vento\".",
       "source": {
         "instrument": "Mars Climate Database v6.2",
         "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
         "date": "Ls 21,3° (início da primavera no norte), ~13h30 hora local, 10 m acima do solo, cenário de clima médio",
         "resolution_m": null,
         "confidence": "Modelo de circulação global, não é medição local. Valor do ponto da grade em 40°N, 202°E (borda da área)."
+      }
+    },
+    {
+      "id": "mcd-vento-direcao",
+      "value": 306,
+      "display": "De noroeste",
+      "unit": "°",
+      "decimals": 0,
+      "seasons": [],
+      "note": "O vento vem de noroeste (~306°) e sopra para sudeste. Velocidade nesse ponto: ~4,7 m/s.",
+      "source": {
+        "instrument": "Mars Climate Database v6.2",
+        "mission": "Modelo climático (LMD / OU / IAA / ESA / CNES)",
+        "date": "Ls 21,9° (início da primavera no norte), ~13h30 hora local, 10 m acima do solo, cenário de clima médio",
+        "resolution_m": null,
+        "confidence": "Modelo de circulação global, não é medição local. Calculado dos componentes leste-oeste (+3,8 m/s) e sul-norte (−2,7 m/s) do vento no ponto da grade em 42°N, 202°E, logo ao norte da área. Direção no padrão da meteorologia: de onde o vento vem (0° = norte, 90° = leste)."
       }
     },
     {
@@ -93,17 +109,17 @@
     },
     {
       "id": "raios-cosmicos",
-      "value": null,
-      "unit": "mSv/ano",
-      "decimals": 0,
+      "value": 0.21,
+      "unit": "mGy/dia",
+      "decimals": 2,
       "seasons": [],
-      "note": "Dose anual de raios cósmicos na superfície. Para converter de rem/ano: multiplique por 10.",
+      "note": "Medida pelo rover Curiosity na cratera Gale, NÃO na área de estudo. Média de 13 medições de 16 minutos no 1º sol após o pouso: 8,7 µGy/h, ou seja, ~0,21 mGy por dia (~76 mGy por ano). Gale tem altitude parecida com a da área de estudo, por isso é a melhor referência disponível.",
       "source": {
-        "instrument": "(preencher: modelo ou artigo do mapa de raios cósmicos)",
-        "mission": null,
-        "date": null,
+        "instrument": "RAD (Radiation Assessment Detector), detector E (plástico, de resposta parecida com a do tecido humano)",
+        "mission": "Curiosity / Mars Science Laboratory (NASA). Dados: NASA PDS, MSL-M-RAD-3-RDR-V1.0",
+        "date": "Sol 1 da missão: 7 ago. 2012, 02:25–06:13 UTC (~11h40–15h20, hora local de Gale)",
         "resolution_m": null,
-        "confidence": "Modelo de radiação; a atmosfera mais espessa das planícies baixas reduz a dose"
+        "confidence": "Medição real, mas feita em outro lugar de Marte (Gale, ~4,6°S, 137,4°E) e num único dia. É dose absorvida (gray); em sievert, que mede o efeito no corpo, o valor é cerca de 3 vezes maior, segundo a equipe do RAD (Hassler et al., 2014, Science)."
       }
     },
     {
@@ -143,13 +159,13 @@
       "unit": "",
       "decimals": 2,
       "seasons": [],
-      "note": "Posição na escala de cores da figura (0 = mínimo, 1 = máximo): ~0,47, acima de ~66% do planeta. Sem a legenda original não dá para converter em %.",
+      "note": "Rochas maiores que 15 cm. Posição na escala de cores do mapa (0 = mínimo, 1 = máximo): ~0,47, acima de ~66% do planeta. O mapa publicado não tem legenda, então não dá para converter em %.",
       "source": {
-        "instrument": "Mapa global de abundância de rochas (figura recebida pela equipe de dados)",
-        "mission": null,
-        "date": null,
+        "instrument": "Viking IRTM (Infrared Thermal Mapper)",
+        "mission": "Viking Orbiters — Christensen, P. R. (1986), Icarus 68, 217–238",
+        "date": "Observações dos orbitadores Viking (1976–1980)",
         "resolution": "1 px/grau (~60 km)",
-        "confidence": "ESTIMATIVA QUALITATIVA: lida das cores de uma figura sem barra de cores, em que a área de estudo inteira ocupa ~3 x 2 pixels (python figure_to_data.py rochas). Fonte original e valor em % a confirmar."
+        "confidence": "ESTIMATIVA QUALITATIVA lida das cores do mapa global de abundância de rochas do IRTM (Mars Global Data Sets, ASU). A área de estudo ocupa ~3 x 2 pixels."
       }
     }
   ]

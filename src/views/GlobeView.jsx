@@ -13,10 +13,18 @@ import stars8k from '../assets/8k_stars.jpg';
 import phobosTextureFile from '../assets/phobos.jpg';
 import deimosTextureFile from '../assets/deimos.jpg';
 import regionsData from '../api/regions.json'; 
+import { STUDY_AREA } from '../config/mapConfig';
 
 // ---------- Configurações da câmera ----------
 const CAMERA_MIN_DISTANCE = 2.5;  // o mais perto (Marte tem raio 1.5)
 const CAMERA_MAX_DISTANCE = 30;   // o mais longe (o Sol está a ~62; não passe de ~50)
+
+// ---------- Zoom do botão "Descer" (globo 3D -> mapa 2D) ----------
+// Altura final da câmera acima da superfície, no fim da animação (Marte tem raio 1.5).
+// MENOR = zoom MAIOR (chega mais perto). Teste entre 0.1 (bem perto) e 0.6 (mais longe).
+const ZOOM_FINAL_HEIGHT = 0.15;
+// Duração da animação, em milissegundos. Maior = descida mais lenta.
+const ZOOM_DURATION_MS = 1800;
 const SENSITIVITY_KEY = 'ares-sensibilidade-camera';
 
 // ---------- Qualidade das texturas ----------
@@ -254,6 +262,9 @@ export default function GlobeView({ onSelectSector }) {
 
     let arcadiaCenterPoint = null;
     const numSegments = 90;
+    // Marcadores e nomes dos locais de pouso: encolhem durante o zoom do "Descer",
+    // para não virarem círculos gigantes quando a câmera chega perto da superfície.
+    const zoomShrink = [];
 
     // 8. Renderização Dinâmica baseada no JSON (`regions.json`)
     regionsData.mars_regions.forEach((reg) => {
@@ -273,9 +284,6 @@ export default function GlobeView({ onSelectSector }) {
         const borderMesh = new THREE.LineLoop(lineGeo, lineMat);
         marsMesh.add(borderMesh);
 
-        if (reg.id === 'arcadia-planitia') {
-          arcadiaCenterPoint = latLonToVector3(reg.center.lat, reg.center.lon, 1.5);
-        }
       } 
       else if (reg.type === 'volcano') {
         const pointCoord = latLonToVector3(reg.center.lat, reg.center.lon, 1.5);
@@ -292,6 +300,7 @@ export default function GlobeView({ onSelectSector }) {
         const siteMesh = new THREE.Mesh(siteGeo, siteMat);
         siteMesh.position.copy(pointCoord);
         marsMesh.add(siteMesh);
+        zoomShrink.push(siteMesh);
       }
 
       const fontSize = reg.type === 'landing_site' ? 22 : 28;
@@ -299,10 +308,14 @@ export default function GlobeView({ onSelectSector }) {
       const offsetLat = reg.geometry?.labelOffsetLat || 0;
       labelSprite.position.copy(latLonToVector3(reg.center.lat + offsetLat, reg.center.lon, 1.56));
       marsMesh.add(labelSprite);
+      if (reg.type === 'landing_site') zoomShrink.push(labelSprite);
     });
 
-    if (!arcadiaCenterPoint) {
-      arcadiaCenterPoint = latLonToVector3(46.0, 187.0, 1.5);
+    // O zoom mira o centro da área de estudo do mapa 2D (pontos AP), definida no mapConfig.js,
+    // para o globo terminar exatamente onde o mapa começa.
+    {
+      const [[south, west], [north, east]] = STUDY_AREA.bounds;
+      arcadiaCenterPoint = latLonToVector3((south + north) / 2, (west + east) / 2, 1.5);
     }
 
     // 9. Animação de Zoom Orbital (Descida para Arcadia Planitia)
@@ -313,13 +326,17 @@ export default function GlobeView({ onSelectSector }) {
       const worldCenterPos = new THREE.Vector3();
       marsMesh.localToWorld(worldCenterPos.copy(arcadiaCenterPoint));
 
-      zoomTarget = worldCenterPos.clone().multiplyScalar(1.355);
+      // Câmera termina a ZOOM_FINAL_HEIGHT acima da superfície, na direção da área de estudo
+      zoomTarget = worldCenterPos.clone().setLength(1.5 + ZOOM_FINAL_HEIGHT);
       startCameraPos.copy(camera.position);
       controls.enabled = false;
+      // Libera a distância mínima da câmera durante a descida; sem isso, o controle "empurra"
+      // a câmera de volta para CAMERA_MIN_DISTANCE e o zoom não passa dali.
+      controls.minDistance = 0;
       setIsAnimating(true);
 
       let startTime = performance.now();
-      const duration = 1200 + startCameraPos.length() * 30;
+      const duration = ZOOM_DURATION_MS;
 
       const animateZoom = (now) => {
         let elapsed = now - startTime;
@@ -330,6 +347,11 @@ export default function GlobeView({ onSelectSector }) {
           : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
         camera.position.lerpVectors(startCameraPos, zoomTarget, easeProgress);
+        // Encolhe os locais de pouso até 15% do tamanho no fim da descida
+        zoomShrink.forEach((obj) => {
+          if (!obj.userData.baseScale) obj.userData.baseScale = obj.scale.clone();
+          obj.scale.copy(obj.userData.baseScale).multiplyScalar(1 - 0.85 * easeProgress);
+        });
         controls.target.lerp(worldCenterPos, 0.1);
         controls.update();
 
