@@ -40,7 +40,7 @@ export function RegionalCard({ layer }) {
         </div>
       )}
       <p className="mt-2 text-[10px] text-sky-300/90 leading-snug">
-        Valor regional: um número só, que vale para a área de estudo inteira.
+        Valor regional: um número só, que vale para a área de estudo inteira. 
         {r.note ? ` ${r.note}` : ''}
       </p>
     </div>
