@@ -19,8 +19,47 @@
       "type": "landing_site",
       "color": "#22d3ee",
       "center": {
-        "lat": -4.62,
-        "lon": 137.4417
+        "lat": -5,
+        "lon": 138
+      },
+      "geometry": {
+        "labelOffsetLat": -0.8
+      }
+    }, 
+    {
+      "id": "gusev",
+      "name": "Cratera Gusev (Spirit)",
+      "type": "landing_site",
+      "color": "#22d3ee",
+      "center": {
+        "lat": -14.5,
+        "lon": 175.4
+      },
+      "geometry": {
+        "labelOffsetLat": -0.8
+      }
+    },
+    {
+      "id": "viking1",
+      "name": "Viking 1",
+      "type": "landing_site",
+      "color": "#22d3ee",
+      "center": {
+        "lat": 22.27,
+        "lon": 312.05
+      },
+      "geometry": {
+        "labelOffsetLat": -0.8
+      }
+    },
+     {
+      "id": "viking2",
+      "name": "Viking 2",
+      "type": "landing_site",
+      "color": "#22d3ee",
+      "center": {
+        "lat": 47.67,
+        "lon": 134.28
       },
       "geometry": {
         "labelOffsetLat": -0.8
