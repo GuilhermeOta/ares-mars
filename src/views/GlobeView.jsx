@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Target, ChevronRight, Compass, X, Settings2 } from 'lucide-react';
+import { Target, ChevronRight, X, Settings2 } from 'lucide-react';
+import logoAres from '../assets/logo-ares.png';
 
 // Importação de todas as texturas reais da missão
 import mars2k from '../assets/2k_mars.jpg';
@@ -24,7 +25,7 @@ const CAMERA_MAX_DISTANCE = 30;   // o mais longe (o Sol está a ~62; não passe
 // MENOR = zoom MAIOR (chega mais perto). Teste entre 0.1 (bem perto) e 0.6 (mais longe).
 const ZOOM_FINAL_HEIGHT = 0.15;
 // Duração da animação, em milissegundos. Maior = descida mais lenta.
-const ZOOM_DURATION_MS = 1800;
+const ZOOM_DURATION_MS = 2200;
 const SENSITIVITY_KEY = 'ares-sensibilidade-camera';
 
 // ---------- Qualidade das texturas ----------
@@ -516,9 +517,7 @@ export default function GlobeView({ onSelectSector }) {
         isLoading ? 'opacity-100 pointer-events-auto' : 'opacity-0'
       }`}>
         <div className="flex flex-col items-center space-y-4 animate-pulse">
-          <div className="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/40 flex items-center justify-center">
-            <Compass className="w-6 h-6 text-amber-400 animate-spin" />
-          </div>
+          <img src={logoAres} alt="Logo do ARES" className="w-24 h-24 select-none" draggable="false" />
           <div className="text-center">
             <h4 className="text-xs font-bold uppercase tracking-[0.3em] text-white">A.T.O.M. // Sistema ARES</h4>
             <p className="text-[10px] font-mono text-amber-400 mt-1 uppercase tracking-widest">A carregar telemetria de Marte...</p>
@@ -543,9 +542,7 @@ export default function GlobeView({ onSelectSector }) {
               <X className="w-3.5 h-3.5" />
             </button>
 
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
-              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 animate-pulse" />
-            </div>
+            <img src={logoAres} alt="" className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 select-none" draggable="false" />
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center space-x-2">

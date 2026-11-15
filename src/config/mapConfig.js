@@ -64,7 +64,7 @@ export const FILTERS = [
       { id: 'swim-thermal', group: 'Disponibilidade de água', name: 'Análise térmica', source: 'SWIM' },
       { id: 'swim-geomorph', group: 'Disponibilidade de água', name: 'Geomorfologia', source: 'SWIM' },
       { id: 'rugosidade', group: 'Estabilidade do terreno', name: 'Rugosidade (TRI)', unit: 'm', source: 'MOLA (calculada)' },
-      { id: 'rochas-irtm', group: 'Estabilidade do terreno', name: 'Abundância de rochas', source: 'Figura global (estimativa)' },
+      { id: 'rochas-irtm', group: 'Estabilidade do terreno', name: 'Abundância de rochas', source: 'Viking IRTM (estimativa)' },
       { id: 'obstaculos', group: 'Estabilidade do terreno', name: 'Obstáculos ao deslocamento', source: 'MOLA (calculado)' },
       { id: 'atividade-vulcanica', group: 'Atividade vulcânica', name: 'Unidades geológicas e vulcanismo', source: 'USGS SIM 3292' },
     ],

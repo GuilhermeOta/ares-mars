@@ -7,7 +7,6 @@ import {
   EyeOff,
   Eye,
   Activity,
-  Compass,
   X
 } from 'lucide-react';
 import GlobeView from './views/GlobeView';
@@ -18,6 +17,7 @@ import RoutePanel from './components/RoutePanel';
 import { fetchRoutes } from './services/routeApi';
 import useLayerManifest from './hooks/useLayerManifest';
 import { FILTERS, LAYER_BY_ID, DEFAULT_ACTIVE_LAYER } from './config/mapConfig';
+import logoAres from './assets/logo-ares.png';
 
 function App() {
   const [viewMode, setViewMode] = useState('globe');
@@ -162,9 +162,7 @@ function App() {
       <header className="absolute top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-md border-b border-zinc-800 flex items-center px-3 sm:px-6 justify-between z-30 shadow-2xl transition-all duration-300">
         <div className="flex items-center space-x-3 sm:space-x-6">
           <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="w-7 h-7 rounded bg-amber-500/10 border border-amber-500/40 flex items-center justify-center transition-transform duration-300 hover:rotate-45 shrink-0">
-              <Compass className="w-4 h-4 text-amber-400" />
-            </div>
+            <img src={logoAres} alt="Logo do ARES" className="w-9 h-9 shrink-0 select-none" draggable="false" />
             <span className="text-lg sm:text-xl font-bold tracking-[0.2em] sm:tracking-[0.25em] text-white">
               ARES
             </span>
@@ -286,11 +284,12 @@ function App() {
         />
       </aside>
 
-      {/* Botão flutuante para REEXIBIR o painel de inspeção (reposicionado no mobile para evitar colisão vertical com os filtros) */}
+      {/* Botão flutuante para REEXIBIR o painel de inspeção (reposicionado no mobile para evitar colisão vertical com os filtros).
+          No celular, some enquanto os filtros estão abertos, para não cobrir o botão "i" das pastas. */}
       {viewMode === 'map' && !isRightVisible && (
         <button
           onClick={() => setIsRightVisible(true)}
-          className="absolute top-32 sm:top-20 right-3 sm:right-6 z-20 p-2.5 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 text-zinc-300 hover:text-white hover:border-amber-500/50 rounded shadow-xl transition-all duration-300 cursor-pointer flex items-center space-x-2 text-xs uppercase tracking-wider font-semibold animate-fade-in hover:scale-105 active:scale-95 transform-gpu"
+          className={`absolute top-32 sm:top-20 right-3 sm:right-6 z-20 p-2.5 bg-zinc-950/90 backdrop-blur-md border border-zinc-800 text-zinc-300 hover:text-white hover:border-amber-500/50 rounded shadow-xl transition-all duration-300 cursor-pointer ${isLeftVisible ? 'hidden sm:flex' : 'flex'} items-center space-x-2 text-xs uppercase tracking-wider font-semibold animate-fade-in hover:scale-105 active:scale-95 transform-gpu`}
         >
           <Eye className="w-4 h-4 text-amber-400" />
           <span className="hidden sm:inline">Exibir Inspeção</span>
