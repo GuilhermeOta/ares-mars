@@ -82,10 +82,8 @@ O desafio pede uma **visão integrada e em camadas** de um local ou rota em Mart
 |---|---|---|
 | **Saulo** | Coordenação geral e back-end | Sistema de rotas inteiro em Python (A*, terreno, obstáculos, modo interativo), organização dos filtros, coleta de dados (SWIM, Mars Climate Database) |
 | **Guilherme** | Front-end e Programação Geral | Site em React, globo 3D, mapa 2D, painéis, integração com a API, publicação no Netlify e no Render, GitHub da equipe, aulas de programação |
-| **Willian** | Análise de dados e back-end | Previsto para os dados e metadados |
 | **Victor** | Design e identidade visual | Previsto |
 | **Anthony** | Matemática e física | Previsto para validar inclinação, pesos do A* e física da atmosfera |
-| **Isabely** | Desenvolvimento da plataforma web | Previsto |
 
 ---
 
@@ -565,7 +563,7 @@ ares-mars/
 
 ## 15. O que ainda falta
 
-### Dados (Saulo e Willian)
+### Dados (Saulo)
 - [ ] **Radiação:** valor de dose do RAD (Curiosity, em Gale) e a referência do artigo, para mostrar como medição de outro local com altitude parecida.
 - [ ] **Abundância de rochas:** fonte original e barra de cores da figura, para converter a estimativa em %.
 - [ ] **Vento:** a direção, além da velocidade.
