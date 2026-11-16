@@ -284,8 +284,8 @@ ares-mars/
 
 | Arquivo | Para quê | Quem costuma mexer |
 |---|---|---|
-| `src/config/mapConfig.js` | Filtros e subfiltros, pontos AP, área de estudo, cores das rotas | Saulo, Willian (⚠️ avise antes) |
-| `public/data/regional.json` | Os números regionais (clima, radiação, rochas…) | Saulo, Willian |
+| `src/config/mapConfig.js` | Filtros e subfiltros, pontos AP, área de estudo, cores das rotas | Saulo (⚠️ avise antes) |
+| `public/data/regional.json` | Os números regionais (clima, radiação, rochas…) | Saulo |
 | `src/components/*.jsx` | Os painéis do site | Front-end |
 | `src/views/*.jsx` | O globo e o mapa | Front-end |
 | `src/index.css` | Cores e estilos | Design, front-end |
@@ -341,8 +341,6 @@ As coordenadas são sempre **latitude °N** e **longitude leste, de 0 a 360**.
 |---|---|---|
 | **Programador geral** (Guilherme) | Todo o projeto, principalmente `src/`. Revisa e faz o merge dos Pull Requests | VS Code no computador |
 | **Coordenação e back-end** (Saulo) | `backend/`, `regional.json` e filtros no `mapConfig.js` | VS Code no computador |
-| **Conteúdo científico** (Isabelly) | Textos sobre os locais e os filtros: `info` no `mapConfig.js` e regiões do globo em `src/api/regions.json` | Site do GitHub ou github.dev |
-| **Dados** (Willian) | `backend/dados/`, `public/data/` e `mapConfig.js` | Site do GitHub ou github.dev |
 | **Design e apresentação** (Victor) | `src/index.css`, cores no `mapConfig.js` e `src/assets/`. Slides, junto com o Anthony (fora do repositório) | github.dev |
 | **Matemática, física e apresentação** (Anthony) | Pesos e declividade em `backend/` e unidades no `mapConfig.js`. Slides, junto com o Victor (fora do repositório) | Site do GitHub ou github.dev |
 ---

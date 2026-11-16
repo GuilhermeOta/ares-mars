@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Target, ChevronRight, X, Settings2 } from 'lucide-react';
 import logoAres from '../assets/logo-ares.png';
+import PlaceInfoModal from '../components/PlaceInfoModal';
+import { PLACE_INFO } from '../config/placeInfo';
 
 // Importação de todas as texturas reais da missão
 import mars2k from '../assets/2k_mars.jpg';
@@ -67,6 +69,9 @@ export default function GlobeView({ onSelectSector }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isHudVisible, setIsHudVisible] = useState(true); // Estado para controlar a visibilidade do HUD de descida
+  // Cartão de informação do local clicado no globo (null = fechado)
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const closePlace = useCallback(() => setSelectedPlace(null), []);
 
   useEffect(() => {
     const currentMount = mountRef.current;
@@ -266,6 +271,21 @@ export default function GlobeView({ onSelectSector }) {
     // Marcadores e nomes dos locais de pouso: encolhem durante o zoom do "Descer",
     // para não virarem círculos gigantes quando a câmera chega perto da superfície.
     const zoomShrink = [];
+    // Objetos que abrem o cartão de informação ao serem clicados (marcadores e nomes dos locais)
+    const clickables = [];
+    const makeClickable = (obj, regionId) => {
+      if (!PLACE_INFO[regionId]) return;
+      obj.userData.regionId = regionId;
+      clickables.push(obj);
+    };
+    // Área de clique invisível, maior que o marcador, para facilitar o toque no celular
+    const addHitArea = (position, radius, regionId) => {
+      if (!PLACE_INFO[regionId]) return;
+      const hit = new THREE.Mesh(new THREE.SphereGeometry(radius, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
+      hit.position.copy(position);
+      marsMesh.add(hit);
+      makeClickable(hit, regionId);
+    };
 
     // 8. Renderização Dinâmica baseada no JSON (`regions.json`)
     regionsData.mars_regions.forEach((reg) => {
@@ -293,6 +313,8 @@ export default function GlobeView({ onSelectSector }) {
         const markerMesh = new THREE.Mesh(markerGeo, markerMat);
         markerMesh.position.copy(pointCoord);
         marsMesh.add(markerMesh);
+        makeClickable(markerMesh, reg.id);
+        addHitArea(pointCoord, 0.08, reg.id);
       } 
       else if (reg.type === 'landing_site') {
         const pointCoord = latLonToVector3(reg.center.lat, reg.center.lon, 1.52);
@@ -302,6 +324,8 @@ export default function GlobeView({ onSelectSector }) {
         siteMesh.position.copy(pointCoord);
         marsMesh.add(siteMesh);
         zoomShrink.push(siteMesh);
+        makeClickable(siteMesh, reg.id);
+        addHitArea(pointCoord, 0.06, reg.id);
       }
 
       const fontSize = reg.type === 'landing_site' ? 22 : 28;
@@ -310,7 +334,41 @@ export default function GlobeView({ onSelectSector }) {
       labelSprite.position.copy(latLonToVector3(reg.center.lat + offsetLat, reg.center.lon, 1.56));
       marsMesh.add(labelSprite);
       if (reg.type === 'landing_site') zoomShrink.push(labelSprite);
+      makeClickable(labelSprite, reg.id);
     });
+
+    // ---------- Clique nos locais: abre o cartão de informação ----------
+    // O "raycaster" traça uma linha da câmera até o ponto clicado e vê o que ela atravessa.
+    // Marte entra na lista para que locais do lado de trás do planeta não sejam clicáveis.
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const placeAt = (event) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hit = raycaster.intersectObjects([marsMesh, ...clickables], false)[0];
+      return hit && hit.object !== marsMesh ? hit.object.userData.regionId : null;
+    };
+    let downPos = null;
+    const onPointerDown = (e) => { downPos = { x: e.clientX, y: e.clientY }; };
+    const onPointerUp = (e) => {
+      // Só conta como clique se o dedo/mouse quase não se mexeu (senão é arrastar o globo)
+      if (!downPos || zoomTarget) return;
+      const moved = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
+      downPos = null;
+      if (moved > 6) return;
+      const id = placeAt(e);
+      if (id) setSelectedPlace(PLACE_INFO[id]);
+    };
+    const onPointerMove = (e) => {
+      // No computador, o cursor vira "mãozinha" em cima de um local clicável
+      if (e.pointerType !== 'mouse' || e.buttons) return;
+      renderer.domElement.style.cursor = placeAt(e) ? 'pointer' : '';
+    };
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
 
     // O zoom mira o centro da área de estudo do mapa 2D (pontos AP), definida no mapConfig.js,
     // para o globo terminar exatamente onde o mapa começa.
@@ -414,6 +472,9 @@ export default function GlobeView({ onSelectSector }) {
     return () => {
       materialsRef.current = null; // a cena vai ser destruída
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointerup', onPointerUp);
+      renderer.domElement.removeEventListener('pointermove', onPointerMove);
       cancelAnimationFrame(animationFrameId);
       if (currentMount) {
         currentMount.removeChild(renderer.domElement);
@@ -656,6 +717,8 @@ export default function GlobeView({ onSelectSector }) {
         </div>
       </div>
 
+      {/* Cartão do local clicado no globo */}
+      <PlaceInfoModal place={selectedPlace} onClose={closePlace} />
     </div>
   );
 }

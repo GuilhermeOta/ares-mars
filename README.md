@@ -90,8 +90,6 @@ A interface tem uma identidade visual inspirada em centros de controle de missõ
 | :--- | :--- | :--- |
 | **Saulo** | Coordenação & Back-end | Liderança do grupo e das reuniões, sistema de rotas em Python ($A^*$, análise do terreno e obstáculos) e coleta dos dados reais de Marte (MOLA, SWIM, Mars Climate Database). |
 | **Guilherme Otaviano** | Programador Geral | Estrutura completa do site (globo 3D, mapa 2D, painéis, filtros e rotas), integração do back-end e dos dados científicos ao front-end, repositório no GitHub e publicação (Netlify e Render). |
-| **Isabelly** | Arquitetura Web | Conteúdo Científico: informações sobre os locais de Marte, com os textos explicativos das regiões, dos locais candidatos e dos filtros. |
-| **Willian** | Análise de Dados | Design & Apresentação: identidade visual e, junto com Anthony, a apresentação em slides. |
 | **Victor** | Design & UX | Identidade visual do ARES, paleta de cores espacial, tipografia, ícones e prototipagem de interface. |
 | **Anthony** | Matemática & Física | Matemática, Física & Apresentação: as validações de antes e, junto com Victor, a apresentação em slides. |
 
@@ -120,7 +118,7 @@ A interface tem uma identidade visual inspirada em centros de controle de missõ
 3. ✅ **Construção da Plataforma:** globo 3D, mapa 2D e layout *Deep Space*.
 4. ✅ **Integração Científica:** 21 de 22 subfiltros com dados (falta apenas a radiação).
 5. ✅ **Planejamento de Rotas:** algoritmo $A^*$ com relevo real e três modos de rota.
-6. 🔄 **Finalização:** dado de radiação, testes de usabilidade, revisão científica e preparação da apresentação.
+6. ✅ **Finalização:** dado de radiação, testes de usabilidade, revisão científica e preparação da apresentação.
 
 ---
 
